@@ -1,0 +1,17 @@
+click
+pandas
+polars
+alembic
+orjson
+sqlalchemy
+psycopg2-binary
+codetiming
+openpyxl
+boto3
+fastavro
+google-cloud-bigquery
+google-api-python-client
+retry
+jsonref
+ipython
+flatterer
