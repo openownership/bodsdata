@@ -31,7 +31,7 @@ setup(
     version="0.1",
     author="Open Ownership",
     author_email="code@opendataservices.coop",
-    scripts=['bodsdata.py'],
+    py_modules=['bodsdata.py'],
     url="https://github.com/openownership/bodsdata",
     license="MIT",
     description="Tools for analysing bods data",
