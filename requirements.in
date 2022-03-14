@@ -1,6 +1,9 @@
 click
 pandas
+fabric
+requests
 polars
+duckdb
 alembic
 orjson
 sqlalchemy
