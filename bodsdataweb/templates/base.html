@@ -32,7 +32,7 @@
                         <a href="{{ url_for ('home') }}" class="{% if request.path == '/' %} nav-link-selected {% endif %} list-group-item list-group-item-action" aria-current="true">
                           Home 
                         </a>
-                        <a href="{{ url_for ('about') }}" class="{% if request.path == '/about' %} nav-link-selected {% endif %} list-group-item list-group-item-action">About</a>
+                        <a href="{{ url_for ('about') }}" class="{% if request.path == '/about/' %} nav-link-selected {% endif %} list-group-item list-group-item-action">About</a>
                       </div>
 
                       {% block extra_nav %}

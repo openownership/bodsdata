@@ -673,5 +673,13 @@ def publish_datasettes():
         requests.get(os.environ['RENDER_DEPLOY_HOOK'])
 
 
+def build_website():
+    from bodsdataweb.app import app
+    from flask_frozen import Freezer
+    freezer = Freezer(app)
+    freezer.freeze()
+
+
+
 if __name__ == "__main__":
     cli()

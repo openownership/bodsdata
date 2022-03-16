@@ -32,6 +32,8 @@ setup(
     author="Open Ownership",
     author_email="code@opendataservices.coop",
     py_modules=['bodsdata'],
+    packages=['bodsdataweb'],
+    package_data={'bodsdataweb': ['templates/*', 'static/*']},
     url="https://github.com/openownership/bodsdata",
     license="MIT",
     description="Tools for analysing bods data",

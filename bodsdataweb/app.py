@@ -1,7 +1,7 @@
 from flask import Flask, config, abort
 from flask import render_template
-from flask_frozen import Freezer
 from flask_bootstrap import Bootstrap5
+from functools import lru_cache
 import requests
 import markdown
 
@@ -18,6 +18,7 @@ bootstrap = Bootstrap5(app)
 base_data_url = 'https://bodsdata.s3.eu-west-2.amazonaws.com/data'
 
 
+@lru_cache()
 def get_metadata():
     all_data = {}
     sources = requests.get(base_data_url + '/all_sources.json').json()
@@ -63,25 +64,17 @@ def home():
     return render_template('home.html', metadata=get_metadata())
 
 
-@app.route("/about")
+@app.route("/about/")
 def about():
     return render_template('about.html', metadata=get_metadata())
 
 
-@app.route("/source/<source>")
+@app.route("/source/<source>/")
 def source(source):
     metadata = get_metadata()
     if source not in metadata:
         abort(404)
 
     return render_template('source.html', metadata=metadata[source], source=source)
-
-
-freezer = Freezer(app)
-
-if __name__ == '__main__':
-    freezer.freeze()
-
-
 
 
