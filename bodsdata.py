@@ -513,7 +513,7 @@ def download_file(url, source, name=None):
                 f.write(chunk)
 
 
-def download_files_s3(source, s3_path_prefix, latest=False, bucket="bodsdata"):
+def download_files_s3(source, s3_path_pattern, latest=False, bucket="bodsdata"):
     print('Downloading Files')
 
     os.makedirs(f'{output_dir}/{source}_download', exist_ok=True)
@@ -521,7 +521,7 @@ def download_files_s3(source, s3_path_prefix, latest=False, bucket="bodsdata"):
     items = []
 
     for item in bucket.objects.all():
-        if item.key.startswith(s3_path_prefix):
+        if re.search(s3_path_pattern, item.key):
             items.append(item.key)
 
     items.sort()
