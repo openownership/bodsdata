@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <div class="card bg-info mb-3 ms-n3 ps-4 pt-2" >
+    <h2 class="serif" >Beneficial ownership data converted to useful formats for analysis</h2>
+    <p>Below is a list of Beneficial Ownership data sources download links and resources to help you work with the data.</p>
+  </div>
+
+  {% for source, info in metadata.items() %}
+    <div class="card" >
+        <div class="card-body">
+          <a href="{{ url_for('source', source=source) }}"><h5 class="card-title serif">{{ info.title }} <small>({{info.update_date}})</small></h5> </a>
+          <p class="card-text">
+             {{ info.description_html|safe }}
+          </p>
+          <a href="{{ url_for('source', source=source) }}" class="card-link">Field Information</a>
+          <a href="{{ info.csv }}" class="card-link">CSV Download</a>
+          <a href="{{ info.sqlite_zip }}" class="card-link">SQLite Download</a>
+          <a href="{{ info.pg_dump }}" class="card-link">Postgresql Dump (gzip)</a>
+          <a href="https://console.cloud.google.com/bigquery?project=ocdsdata&p=bodsdata&d={{source}}&page=dataset" class="card-link">Big Query</a>
+          <a href="https://bodsdata-datasette.onrender.com/{{source}}" class="card-link">Datasette</a>
+        </div>
+    </div>
+  {% endfor %}
+
+{% endblock %}
+

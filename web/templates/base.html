@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        {% block head %}
+        <!-- Required meta tags -->
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+        {% block styles %}
+            <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap.css') }}">
+        {% endblock %}
+
+        <title>Beneficial Ownernship Data Library</title>
+        {% endblock %}
+    </head>
+    <body>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-2 vh-100 overflow-auto border-end border-1">
+                    <div class="row">
+                        <div class="col mt-2">
+                            <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto link-dark text-decoration-none">
+                                <h4 class="fw-bolder">Beneficial Ownership <br/>
+                                    Data Library</h4>
+                            </a>
+                        </div>
+                    </div>
+                    <hr/>
+
+                    {% block nav %}
+                      <div class="list-group">
+                        <a href="{{ url_for ('home') }}" class="{% if request.path == '/' %} nav-link-selected {% endif %} list-group-item list-group-item-action" aria-current="true">
+                          Home 
+                        </a>
+                        <a href="{{ url_for ('about') }}" class="{% if request.path == '/about' %} nav-link-selected {% endif %} list-group-item list-group-item-action">About</a>
+                      </div>
+
+                      {% block extra_nav %}
+                      {% endblock extra_nav %}
+
+                    {% endblock nav %}
+                </div>
+                <div class="col-10 vh-100 overflow-auto bg-light">
+                    {% block content %}{% endblock %}
+                </div>
+            </div>
+        </div>
+
+
+
+        {% block scripts %}
+            <!-- Optional JavaScript -->
+            {{ bootstrap.load_js() }}
+        {% endblock %}
+    </body>
+</html>

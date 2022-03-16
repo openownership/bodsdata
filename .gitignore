@@ -6,6 +6,8 @@
 .ve
 .ve2
 *.pyc
+*.egg-info
+tmp
 __pycache__
 .pytest_cache/
 media
@@ -21,3 +23,4 @@ src/
 airflow/logs
 data/
 airflow/airflow-webserver.pid
+build

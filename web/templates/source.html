@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% from 'bootstrap5/table.html' import render_table %}
+
+{% block content %}
+  <div class="card bg-info mb-3 ms-n3 ps-4 pt-2" >
+    <h2 id="title" class="serif" >{{ metadata.title }} <small>({{metadata.update_date}})</small></h2>
+    {{ metadata.description_html|safe }}
+  </div>
+  <div class="row">
+    <div class="col">
+      <div class="card" >
+        <div class="card-body">
+          <h4 id="downloads" class="card-title serif">Downloads and links to hosted databases</h4> </a>
+          <a href="{{ metadata.csv }}" class="card-link">CSV Download</a>
+          <a href="{{ metadata.sqlite_zip }}" class="card-link">SQLite Download</a>
+          <a href="{{ metadata.pg_dump }}" class="card-link">Postgresql Dump (gzip)</a>
+          <a href="https://console.cloud.google.com/bigquery?project=ocdsdata&p=bodsdata&d={{source}}&page=dataset" class="card-link">Big Query</a>
+          <a href="https://bodsdata-datasette.onrender.com/{{source}}" class="card-link">Datasette</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col">
+      <div class="card mt-2" >
+        <div class="card-body">
+          <h4 class="card-title serif">Tables</h4>
+            {% for table, data in metadata.field_tables.items() %}
+               <a href="#" data-bs-toggle="modal" data-bs-target="#sample-table-{{table}}"> <h5 id="table-{{table}}" class="card-title mt-4 fw-bolder text-primary">{{ table }}</h5></a>
+               {{render_table(data, responsive=True, titles= [('field_name', 'Field Name'), ('field_type', 'Field Type'), ('field_count', 'Field Count'), ('sample_1', 'Sample 1'), ('sample_2', 'Sample 2'), ('sample_3', 'Sample 3')]) }}
+            {% endfor %}
+
+
+
+            {% for table, info in metadata.sample_tables.items() %}
+              <div id="sample-table-{{table}}" class="modal" tabindex="-1">
+                <div class="modal-dialog modal-xl">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="card-title mt-4">Sample data from `{{ table }}` table.</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                      {{render_table(info.data, responsive=True, titles=info.headers) }}
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block extra_nav %}
+  <div class="list-group mt-4">
+
+    <a href="#title" class="nav-link-selected list-group-item list-group-item-action fw-bold bg-light" aria-current="true">
+      {{ metadata.title }}
+    </a>
+    <a href="#downloads" class="list-group-item list-group-item-action">Downloads and links</a>
+    {% for table, info in metadata.sample_tables.items() %}
+      <a href="#table-{{table}}" class="list-group-item list-group-item-action">{{table}}</a>
+    {% endfor %}
+
+  </div>
+{% endblock extra_nav %}
