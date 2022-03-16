@@ -596,10 +596,13 @@ def flatten(source, sample):
         json.dump(datapackage, f, indent=2)
 
 
-def publish_metadata(source):
+def publish_metadata(source, title="", description=""):
     print("publishing metadata")
 
-    out = {"parquet": {}, "avro": {}, "update_date": datetime.datetime.now().isoformat()[:10]}
+    out = {"parquet": {},
+           "update_date": datetime.datetime.now().isoformat()[:10], 
+           "description": description,
+           "title": title}
 
     bucket = get_s3_bucket(upload_bucket)
     bucket_url = f"{bucket.meta.client.meta.endpoint_url}/{bucket.name}"
