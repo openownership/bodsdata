@@ -46,7 +46,7 @@ from openpyxl.cell.cell import ILLEGAL_CHARACTERS_RE
 this_path = Path(__file__).parent.absolute()
 
 output_dir = tempfile.gettempdir()
-upload_bucket = "bodsdata"
+upload_bucket = "oo-bodsdata"
 
 render_host = None
 s3_data_location = None
