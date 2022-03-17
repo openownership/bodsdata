@@ -7,7 +7,7 @@
   </div>
 
   {% for source, info in metadata.items() %}
-    <div class="card" >
+    <div class="card mb-3" >
         <div class="card-body">
           <a href="{{ url_for('source', source=source) }}"><h5 class="card-title serif">{{ info.title }} <small>({{info.update_date}})</small></h5> </a>
           <p class="card-text">

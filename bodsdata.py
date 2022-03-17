@@ -519,6 +519,10 @@ def download_file(url, source, name=None):
         with open(filename, 'wb') as f:
             for chunk in r.iter_content(chunk_size=8192):
                 f.write(chunk)
+        if name.endswith('.zip'):
+            with zipfile.ZipFile(filename, 'r') as zipObj:
+               zipObj.extractall(path=f'{output_dir}/{source}_download/')
+            os.remove(filename)
 
 
 def download_files_s3(source, s3_path_pattern, latest=False, bucket="bodsdata"):
