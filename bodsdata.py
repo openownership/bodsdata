@@ -449,6 +449,17 @@ def polars_dataframe(source):
 
 @retry(tries=5)
 def upload_s3(filepath, bucket_location, bucket=None):
+    """ Upload file in `filepath` to s3 at `bucket_location`.
+
+    Parameters
+    ----------
+    source : string
+        Data Source Name
+    bucket_location : string
+        Data Source Name
+    bucket : string
+        Name of bucket to upload to
+    """
     bucket = get_s3_bucket(bucket or upload_bucket)
     object = bucket.Object(
         bucket_location
@@ -467,6 +478,15 @@ def upload_s3(filepath, bucket_location, bucket=None):
 
 @retry(tries=5)
 def create_parquet(source, upload=False):
+    """ Create parquet files 
+
+    Parameters
+    ----------
+    source : string
+        Data Source Name
+    upload: bool
+        Upload to s3 bucket and delete local files.
+    """
     print("Creating parquet")
     if upload:
         print("and uploading to bigquery")
@@ -502,7 +522,16 @@ def create_parquet(source, upload=False):
             export_bigquery(source, filepath, resource['name'])
 
 
-def create_avro(source, upload=False, bigquery=False):
+def create_avro(source, upload=False):
+    """ Create avro files 
+
+    Parameters
+    ----------
+    source : string
+        Data Source Name
+    upload: bool
+        Upload to s3 bucket and delete local files.
+    """
     os.makedirs(f'{output_dir}/{source}/avro')
     for table, df in polars_generator(source):
         filepath = f'{output_dir}/{source}/avro/{table.lower()}.avro'
@@ -515,6 +544,15 @@ def create_avro(source, upload=False, bigquery=False):
 
 
 def create_pgdump(source, upload=False):
+    """ Create pg_dump file 
+
+    Parameters
+    ----------
+    source : string
+        Data Source Name
+    upload: bool
+        Upload to s3 bucket and delete local files.
+    """
     print("Creating pg_dump")
     filepath = f'{output_dir}/{source}/pgdump.sql.gz'
     with gzip.open(filepath, 'wt+', compresslevel=5) as f:
@@ -544,6 +582,17 @@ def create_pgdump(source, upload=False):
 
 
 def create_samples(source, upload=False, size=10):
+    """ Create samples.json file, needs local parquet files to be generated.
+
+    Parameters
+    ----------
+    source : string
+        Data Source Name
+    upload: bool
+        Upload to s3 bucket and delete local files.
+    upload: int
+        How many samples
+    """
     print("Creating samples")
     output = {}
     df_output = {}
@@ -560,7 +609,6 @@ def create_samples(source, upload=False, size=10):
             for field in resource['schema']['fields']:
                 columns[field['name']] = duckdb_lookup[field["type"]]
 
-            #read_csv('{output_dir}/{source}/{resource['path']}', header=True, columns = {repr(columns)})
             df = con.execute(f'''
                 SELECT 
                     * 
@@ -584,6 +632,19 @@ def create_samples(source, upload=False, size=10):
         
 
 def download_file(url, source, name=None):
+    """ Download file to download directory ready to be processes.
+    Can be called many times to download many files.
+    Accepts zip files which will be unzipped in download directory.
+
+    Parameters
+    ----------
+    url : string
+        url of json, json lines file or zip file containing json/json lines.
+    source : string
+        Data Source Name
+    name: string
+        Choose name of file. Will not work for zip file contents.
+    """
     print('Downloading File')
     os.makedirs(f'{output_dir}/{source}_download', exist_ok=True)
     if not name:
@@ -603,6 +664,19 @@ def download_file(url, source, name=None):
 
 
 def download_files_s3(source, s3_path_pattern, latest=False, bucket="bodsdata"):
+    """ Download file to form s3 with given regex pattern.
+
+    Parameters
+    ----------
+    source : string
+        Data Source Name
+    s3_path_pattern : string
+        RE pattern to match
+    bucket: string
+        Name of bucket to get the files from
+    latest: bool
+        Just get the latest file from matched results
+    """
     print('Downloading Files')
 
     os.makedirs(f'{output_dir}/{source}_download', exist_ok=True)
@@ -624,14 +698,39 @@ def download_files_s3(source, s3_path_pattern, latest=False, bucket="bodsdata"):
 
 
 def remove_download(source):
+    """ Remove download folder
+
+    Parameters
+    ----------
+    source : string
+        Data Source Name
+    """
     shutil.rmtree(f'{output_dir}/{source}_download', ignore_errors=True)
 
 
 def remove_output(source):
+    """ Remove output folder
+
+    Parameters
+    ----------
+    source : string
+        Data Source Name
+    """
     shutil.rmtree(f'{output_dir}/{source}', ignore_errors=True)
 
 
 def run_flatterer(source, statement_type, sample=None):
+    """ Run flatterer for a particular bods statement type
+
+    Parameters
+    ----------
+    source : string
+        Data Source Name
+    statement_type : string
+        Bods statement type. One of person, entity, ownershipOrControl 
+    sample : int
+        Only take this amout of rows from the data.
+    """
     print(f"Flattening {statement_type} to make CSV and SQLite")
     def flatten_iterator():
         for item in glob.glob(f'{output_dir}/{source}_download/*'):
@@ -665,7 +764,16 @@ def run_flatterer(source, statement_type, sample=None):
         force=True, table_prefix=f'{short_statement_type}_', sqlite=True, sqlite_path=f'{output_dir}/{source}/sqlite.db')
 
 
-def flatten(source, sample):
+def flatten(source, sample=None):
+    """ Run flatterer against all statement types and merge all into one folder.
+
+    Parameters
+    ----------
+    source : string
+        Data Source Name
+    sample : int
+        Only take this amount of rows for each statement time.
+    """
     run_flatterer(source, 'person', sample)
     run_flatterer(source, 'entity', sample)
     run_flatterer(source, 'ownershipOrControl', sample)
@@ -686,6 +794,17 @@ def flatten(source, sample):
 
 
 def publish_metadata(source, title="", description=""):
+    """ Gather metadata about this source and push to s3 
+
+    Parameters
+    ----------
+    source : string
+        Data Source Name
+    title : string
+        Title of the source
+    description : string
+        description of the source
+    """
     print("publishing metadata")
 
     out = {"parquet": {},
@@ -743,6 +862,9 @@ def publish_metadata(source, title="", description=""):
 
 
 def publish_datasettes():
+    """ Publish all the datasettes """
+
+    print("publishing metadata")
     all_sources = requests.get(s3_data_location + 'all_sources.json').json()
 
     with tempfile.TemporaryDirectory() as tmpdirname:
@@ -763,6 +885,7 @@ def publish_datasettes():
 
 
 def build_website():
+    """ Build website and push to s3"""
     from bodsdataweb.app import app
     from flask_frozen import Freezer
 
