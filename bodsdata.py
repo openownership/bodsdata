@@ -676,6 +676,7 @@ def publish_datasettes():
 def build_website():
     from bodsdataweb.app import app
     from flask_frozen import Freezer
+
     freezer = Freezer(app)
     freezer.freeze()
 

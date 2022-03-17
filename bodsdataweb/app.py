@@ -9,13 +9,14 @@ import markdown
 app = Flask(__name__)
 
 config = {
+   "FREEZER_DESTINATION": "/tmp/bodsdata-web/"
 }
 
 app.config.from_mapping(config)
 
 bootstrap = Bootstrap5(app)
 
-base_data_url = 'https://bodsdata.s3.eu-west-2.amazonaws.com/data'
+base_data_url = 'https://oo-bodsdata.s3.eu-west-1.amazonaws.com/data'
 
 
 @lru_cache()
