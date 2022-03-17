@@ -230,6 +230,11 @@ def _drop_schema(schema):
 
 
 def get_bigquery_client():
+    """ Get bigquery client 
+
+    Needs `GOOGLE_SERVICE_ACCOUNT` envirnment varibale as a base64 encoding of
+    the account JSON.
+    """
     json_acct_info = orjson.loads(
         base64.b64decode(os.environ["GOOGLE_SERVICE_ACCOUNT"])
     )
@@ -238,6 +243,13 @@ def get_bigquery_client():
 
 
 def refresh_bigquery(source):
+    """ Make a new public big query project. 
+
+    Parameters
+    ----------
+    source : string
+        Data Source Name
+    """
     print("Refreshing Bigquery")
     client = get_bigquery_client()
     dataset_id = f"{client.project}.{source}"
@@ -258,6 +270,17 @@ def refresh_bigquery(source):
 
 
 def export_bigquery(source, parquet_path, table_name):
+    """ Make a new public big query project. 
+
+    Parameters
+    ----------
+    source : string
+        Data Source Name
+    parquet_path : string
+        parquet file to upload to big query
+    table_name : string
+        big_query table name
+    """
     client = get_bigquery_client()
     dataset_id = f"{client.project}.{source}"
 
@@ -273,8 +296,16 @@ def export_bigquery(source, parquet_path, table_name):
         )
 
 
-
 def sqlite_zip(source, upload=False):
+    """ Make a zip file of the sqlite database
+
+    Parameters
+    ----------
+    source : string
+        Data Source Name
+    upload: bool
+        Upload to s3 bucket and delete local file.
+    """
     print("Making sqlite.zip")
     filepath = f'{output_dir}/{source}/sqlite.zip'
     with zipfile.ZipFile(filepath, 'w', compression=zipfile.ZIP_DEFLATED) as f_zip:
@@ -290,6 +321,15 @@ def sqlite_zip(source, upload=False):
 
 
 def sqlite_gzip(source, upload=False):
+    """ Make a gzip file of the sqlite database
+
+    Parameters
+    ----------
+    source : string
+        Data Source Name
+    upload: bool
+        Upload to s3 bucket and delete local file.
+    """
     print("Making sqlite.gz")
     filepath = f'{output_dir}/{source}/sqlite.db.gz'
     with open(f'{output_dir}/{source}/sqlite.db', 'rb') as f_in:
@@ -303,6 +343,15 @@ def sqlite_gzip(source, upload=False):
 
 
 def datapackage(source, upload=False):
+    """ Make a zip file of CSV files along with the `datapackage.json`
+
+    Parameters
+    ----------
+    source : string
+        Data Source Name
+    upload: bool
+        Upload to s3 bucket and delete local file.
+    """
     print("Making datapackage")
     filepath = f'{output_dir}/{source}/csv.zip'
     with zipfile.ZipFile(filepath, 'w', compression=zipfile.ZIP_DEFLATED) as f_zip:
@@ -340,6 +389,13 @@ duckdb_lookup = {
 
 
 def polars_generator(source):
+    """ Return iterator of tuple of table_name and polars dataframe.
+
+    Parameters
+    ----------
+    source : string
+        Data Source Name
+    """
 
     with open(f'{output_dir}/{source}/datapackage.json', 'r') as f:
         datapackage = json.load(f)
@@ -355,6 +411,13 @@ def polars_generator(source):
 
 
 def pandas_generator(source):
+    """ Return iterator of tuple of table_name and pandas dataframe.
+
+    Parameters
+    ----------
+    source : string
+        Data Source Name
+    """
     with open(f'{output_dir}/{source}/datapackage.json', 'r') as f:
         datapackage = json.load(f)
 
@@ -363,10 +426,24 @@ def pandas_generator(source):
 
 
 def pandas_dataframe(source):
+    """ Return dict of table_name as key and pandas dataframe as value.
+
+    Parameters
+    ----------
+    source : string
+        Data Source Name
+    """
     return dict(pandas_generator(source))
 
 
 def polars_dataframe(source):
+    """ Return dict of table_name as key and polars dataframe as value.
+
+    Parameters
+    ----------
+    source : string
+        Data Source Name
+    """
     return dict(polars_generator(source))
 
 
