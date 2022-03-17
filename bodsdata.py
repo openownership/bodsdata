@@ -562,7 +562,7 @@ def run_flatterer(source, statement_type, sample=None):
             with opener(f'{output_dir}/{source}_download/{file_name}') as f:        
                 start_of_file = f.read(100).strip()
                 path = ''
-                if start_of_file == '[':
+                if start_of_file[0] == '[':
                     path = 'item'
 
                 f.seek(0)
