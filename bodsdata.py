@@ -1,4 +1,5 @@
 import base64
+import mimetypes
 from fabric import Connection
 from pathlib import Path
 from distutils.command.upload import upload
@@ -47,6 +48,7 @@ this_path = Path(__file__).parent.absolute()
 
 output_dir = tempfile.gettempdir()
 upload_bucket = "oo-bodsdata"
+web_bucket = "oo-bodsdata-web"
 
 render_host = None
 s3_data_location = None
@@ -369,14 +371,20 @@ def polars_dataframe(source):
 
 
 @retry(tries=5)
-def upload_s3(filepath, bucket_location):
-    bucket = get_s3_bucket(upload_bucket)
+def upload_s3(filepath, bucket_location, bucket=None):
+    bucket = get_s3_bucket(bucket or upload_bucket)
     object = bucket.Object(
         bucket_location
     )
+    args = {"ACL": "public-read"}
+
+    mimetype, _ = mimetypes.guess_type(filepath)
+    if mimetype:
+        args["ContentType"] = mimetype
+
     object.upload_file(
         filepath, 
-        ExtraArgs={"ACL": "public-read"}
+        ExtraArgs=args
     )
 
 
@@ -680,6 +688,12 @@ def build_website():
     freezer = Freezer(app)
     freezer.freeze()
 
+    base_path = Path('/tmp/bodsdata-web/')
+
+    files = [(str(path), str(path.relative_to('/tmp/bodsdata-web')))
+             for path in base_path.glob('**/*.*') if path.is_file()]
+    for filepath, bucket_location in files:
+        upload_s3(filepath, bucket_location, bucket=web_bucket)
 
 
 if __name__ == "__main__":
