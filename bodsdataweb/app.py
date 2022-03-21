@@ -9,7 +9,7 @@ import markdown
 app = Flask(__name__)
 
 config = {
-   "FREEZER_DESTINATION": "/tmp/bodsdata-web/",
+   "FREEZER_DESTINATION": "build",
    "FREEZER_STATIC_IGNORE": ['*.scss']
 }
 

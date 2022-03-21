@@ -892,13 +892,5 @@ def build_website():
     freezer = Freezer(app)
     freezer.freeze()
 
-    base_path = Path('/tmp/bodsdata-web/')
-
-    files = [(str(path), str(path.relative_to('/tmp/bodsdata-web')))
-             for path in base_path.glob('**/*.*') if path.is_file()]
-    for filepath, bucket_location in files:
-        upload_s3(filepath, bucket_location, bucket=web_bucket)
-
-
 if __name__ == "__main__":
     cli()
