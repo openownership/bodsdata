@@ -881,7 +881,7 @@ def publish_datasettes():
             sqlite_gz = s3_data_location + f'{source}/sqlite.db.gz'
             c.run(f'curl {sqlite_gz} | gunzip > /var/data/{source}.db')
 
-        requests.get(os.environ['RENDER_DEPLOY_HOOK'])
+        requests.get(os.environ['RENDER_DATASETTE_DEPLOY_HOOK'])
 
 
 def build_website():
@@ -891,6 +891,11 @@ def build_website():
 
     freezer = Freezer(app)
     freezer.freeze()
+
+
+def update_website():
+    requests.get(os.environ['RENDER_WEB_DEPLOY_HOOK'])
+
 
 if __name__ == "__main__":
     cli()
