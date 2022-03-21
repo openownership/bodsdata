@@ -83,7 +83,7 @@ The following open source tools and libraries are used to power the data analysi
 * [Data Package](https://specs.frictionlessdata.io/data-package/) - [Frictionless Data](https://frictionlessdata.io/)
 * [Datasette](https://datasette.io/) - [Simon Willison](https://simonwillison.net/)
 * [Deep Note](https://deepnote.com/)
-* [DuckDb](https://github.com/duckdb/duckdb)
+* [DuckDB](https://github.com/duckdb/duckdb)
 * [Flatterer](https://flatterer.opendata.coop/) - [Open Data Services Co-operative](https://opendataservices.coop/)
 * [Pandas](https://pandas.pydata.org/)
 * [Polars](https://www.pola.rs/)
