@@ -25,6 +25,7 @@ install_requires = [
     "flatterer",
     "frozen-flask",
     "bootstrap-flask",
+    "markdown"
 ]
 
 

@@ -387,3 +387,10 @@ label,
   border-top-right-radius: 0;
 }
 
+
+@media (min-width: 992px) {
+  .vh-lg-100 {
+    height: 100vh !important;
+  }
+}
+

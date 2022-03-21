@@ -3,7 +3,7 @@
 {% from 'bootstrap5/table.html' import render_table %}
 
 {% block content %}
-  <div class="card bg-info mb-3 ms-n3 ps-4 pt-2" >
+  <div class="card bg-info mb-3 ms-n3 me-n2 ps-4 pt-2" >
     <h2 id="title" class="serif" >{{ metadata.title }} <small>({{metadata.update_date}})</small></h2>
     {{ metadata.description_html|safe }}
   </div>
@@ -59,16 +59,10 @@
   </div>
 {% endblock %}
 
-{% block extra_nav %}
-  <div class="list-group mt-4">
+{% block top_extra_nav %}
+  {% include 'source_nav.html' %}
+{% endblock top_extra_nav %}
 
-    <a href="#title" class="nav-link-selected list-group-item list-group-item-action fw-bold bg-light" aria-current="true">
-      {{ metadata.title }}
-    </a>
-    <a href="#downloads" class="list-group-item list-group-item-action">Downloads and Links</a>
-    {% for table, info in metadata.sample_tables.items() %}
-      <a href="#table-{{table}}" class="list-group-item list-group-item-action">{{table}}</a>
-    {% endfor %}
-
-  </div>
-{% endblock extra_nav %}
+{% block side_extra_nav %}
+  {% include 'source_nav.html' %}
+{% endblock side_extra_nav %}
