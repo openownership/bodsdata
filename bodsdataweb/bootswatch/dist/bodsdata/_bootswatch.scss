@@ -5,14 +5,14 @@
 // Variables
 
 //$web-font-path: "https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&display=swap" !default;
-$web-font-path: "http://fonts.cdnfonts.com/css/arimo" !default;
+$web-font-path: "https://fonts.cdnfonts.com/css/arimo" !default;
 
 @if $web-font-path {
   @import url($web-font-path);
 }
 
 
-@import url("http://fonts.cdnfonts.com/css/playfair-display");
+@import url("https://fonts.cdnfonts.com/css/playfair-display");
 
 .serif {
   font-family: "Playfair Display", serif;

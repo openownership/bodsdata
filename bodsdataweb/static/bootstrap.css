@@ -11,8 +11,8 @@
  * Copyright 2011-2021 Twitter, Inc.
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
  */
-@import url("http://fonts.cdnfonts.com/css/arimo");
-@import url("http://fonts.cdnfonts.com/css/playfair-display");
+@import url("https://fonts.cdnfonts.com/css/arimo");
+@import url("https://fonts.cdnfonts.com/css/playfair-display");
 :root {
   --bs-blue: #008cba;
   --bs-indigo: #3c31d5;
