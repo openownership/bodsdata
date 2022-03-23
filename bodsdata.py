@@ -907,6 +907,8 @@ def publish_datasettes():
             sqlite_gz = s3_data_location + f'{source}/sqlite.db.gz'
             c.run(f'curl {sqlite_gz} | gunzip > /var/data/{source}.db')
 
+        c.run(f'curl {s3_data_location}inspect-data.json > /var/data/inspect-data.json')
+
         requests.get(os.environ['RENDER_DATASETTE_DEPLOY_HOOK'])
 
 
