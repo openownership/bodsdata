@@ -793,7 +793,7 @@ def flatten(source, sample=None):
         json.dump(datapackage, f, indent=2)
 
 
-def publish_metadata(source, title="", description=""):
+def publish_metadata(source, title="", description="", upload=True):
     """ Gather metadata about this source and push to s3 
 
     Parameters
@@ -816,18 +816,22 @@ def publish_metadata(source, title="", description=""):
     bucket_url = f"{bucket.meta.client.meta.endpoint_url}/{bucket.name}"
 
     all_sources = set()
+    inspect_data = {}
 
     for item in sorted(bucket.objects.all(), key=lambda x: x.key.split("/")[-1]):
         item_url = f"{bucket_url}/{item.key}"
-
         parts = item.key.split("/")
+        file_name = parts[-1]
+
+        if file_name == "inspect-data.json":
+            inspect_data.update(requests.get(item_url).json())
+
         if parts[0] == 'data' and len(parts) > 2:
             all_sources.add(parts[1])
 
         if parts[0] != 'data' or parts[1] != source:
             continue
 
-        file_name = parts[-1]
 
         if file_name.endswith("csv.zip"):
             out["csv"] = item_url
@@ -851,14 +855,37 @@ def publish_metadata(source, title="", description=""):
         json.dump(out, f, indent=2)
 
     bucket_location = f"data/{source}/metadata.json"
-    upload_s3(filepath, bucket_location)
+    if upload:
+        upload_s3(filepath, bucket_location)
 
     filepath = f'{output_dir}/all_sources.json'
     with open(filepath, 'w+') as f:
         json.dump(list(all_sources), f, indent=2)
 
     bucket_location = f"data/all_sources.json"
-    upload_s3(filepath, bucket_location)
+    if upload:
+        upload_s3(filepath, bucket_location)
+
+    filepath = f'{output_dir}/inspect-data.json'
+    with open(filepath, 'w+') as inspect_file:
+        json.dump(inspect_data, inspect_file)
+
+    bucket_location = f"data/inspect-data.json"
+    if upload:
+        upload_s3(filepath, bucket_location)
+
+
+def make_datasette_infofile(source):
+    output = subprocess.run(["datasette", "inspect", f'{output_dir}/{source}/sqlite.db'], text=True, capture_output=True)
+    inspect_data = json.loads(output.stdout)
+    inspect_data["sqlite"]["file"] = f"{source}.db"
+    inspect_data[source] = inspect_data["sqlite"]
+    inspect_data.pop("sqlite")
+    filepath = f'{output_dir}/{source}/inspect-data.json'
+    with open(filepath, 'w+') as inspect_file:
+        json.dump(inspect_data, inspect_file)
+
+    upload_s3(filepath, f"data/{source}/inspect-data.json")
 
 
 def publish_datasettes():
@@ -872,9 +899,9 @@ def publish_datasettes():
         private_key.write_text(os.environ['RENDER_SSH_KEY'])
         
         c = Connection(
-        host=render_host,
-        connect_kwargs={
-            "key_filename": str(private_key),
+            host=render_host,
+            connect_kwargs={
+                "key_filename": str(private_key),
             }
         )
         for source in all_sources:
