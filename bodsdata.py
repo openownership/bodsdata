@@ -48,7 +48,6 @@ this_path = Path(__file__).parent.absolute()
 
 output_dir = tempfile.gettempdir()
 upload_bucket = "oo-bodsdata"
-web_bucket = "oo-bodsdata-web"
 
 render_host = None
 s3_data_location = None
@@ -663,7 +662,7 @@ def download_file(url, source, name=None):
             os.remove(filename)
 
 
-def download_files_s3(source, s3_path_pattern, latest=False, bucket="bodsdata"):
+def download_files_s3(source, s3_path_pattern, latest=False, bucket="bodsdata-oo"):
     """ Download file to form s3 with given regex pattern.
 
     Parameters
@@ -823,7 +822,7 @@ def publish_metadata(source, title="", description="", upload=True):
         parts = item.key.split("/")
         file_name = parts[-1]
 
-        if file_name == "inspect-data.json":
+        if file_name == "inspect-data.json" and len(parts) > 2:
             inspect_data.update(requests.get(item_url).json())
 
         if parts[0] == 'data' and len(parts) > 2:
