@@ -82,7 +82,7 @@ The following open source tools and libraries are used to power the data analysi
 * [Big Query](https://cloud.google.com/bigquery) - Google
 * [Data Package](https://specs.frictionlessdata.io/data-package/) - [Frictionless Data](https://frictionlessdata.io/)
 * [Datasette](https://datasette.io/) - [Simon Willison](https://simonwillison.net/)
-* [Deep Note](https://deepnote.com/)
+* [Deepnote](https://deepnote.com/)
 * [DuckDB](https://github.com/duckdb/duckdb)
 * [Flatterer](https://flatterer.opendata.coop/) - [Open Data Services Co-operative](https://opendataservices.coop/)
 * [Pandas](https://pandas.pydata.org/)
