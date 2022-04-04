@@ -75,7 +75,7 @@ To demonstrate the value of publishers using the [Beneficial Ownership Data Stan
 
 These open source beneficial ownership data analysis tools aim to help analysts, journalists and anyone wanting to examine and dive into beneficial ownership data published in line with the [Beneficial Ownership Data Standard](https://standard.openownership.org/).
 
-This website was created by [Open Data Services Co-operative](https://opendataservices.coop/) in partnership with [Open Ownership](https://www.openownership.org/).
+This website was created by [Open Data Services](https://opendataservices.coop/) in partnership with [Open Ownership](https://www.openownership.org/).
 
 The following open source tools and libraries are used to power the data analysis tools: 
 
