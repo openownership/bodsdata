@@ -380,6 +380,8 @@ polars_type_lookup = {
 
 duckdb_lookup = {
     "date": "timestamp",
+    "datetime": "timestamp",
+    "string": "text",
     "text": "text",
     "null": "text",
     "number": "double",
