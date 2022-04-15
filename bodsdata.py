@@ -490,7 +490,7 @@ def create_parquet(source, upload=False):
     if upload:
         print("and uploading to bigquery")
 
-    os.makedirs(f'{output_dir}/{source}/parquet')
+    os.makedirs(f'{output_dir}/{source}/parquet', exist_ok=True)
     con = duckdb.connect()
     con.execute("PRAGMA memory_limit='1GB'")
 
