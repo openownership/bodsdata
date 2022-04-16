@@ -5,6 +5,7 @@ from pathlib import Path
 from distutils.command.upload import upload
 import pandas
 import polars
+from google.cloud import bigquery
 import duckdb
 import csv
 import datetime
@@ -27,6 +28,7 @@ from textwrap import dedent
 import ijson
 import flatterer
 
+
 import boto3
 import click
 import openpyxl
@@ -35,7 +37,6 @@ import requests
 import sqlalchemy as sa
 from codetiming import Timer
 from fastavro import parse_schema, writer
-from google.cloud import bigquery
 from google.cloud.bigquery.dataset import AccessEntry
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
