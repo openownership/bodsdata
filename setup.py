@@ -17,7 +17,7 @@ install_requires = [
     "openpyxl",
     "boto3",
     "fastavro",
-    "google-cloud-bigquery",
+    "google-cloud-bigquery < 3",
     "google-api-python-client",
     "retry",
     "jsonref",
