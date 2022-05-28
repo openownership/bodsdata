@@ -73,7 +73,7 @@ To help with the publication of structured, high-quality, interoperable benefici
 
 To demonstrate the value of publishers using the [Beneficial Ownership Data Standard](https://standard.openownership.org/) and being able to connect or analyse beneficial data from multiple jurisdictions, we created the [Open Ownership Register](https://register.openownership.org/) which imports data from Denmark, Slovakia and the UK, structures the data in line with [v0.1 of our Beneficial Ownership Data Standard](https://standard.openownership.org/en/0.1.0/) offering it for anyone to [download](https://register.openownership.org/download) under the [Open Data Commons Attribution License](https://opendatacommons.org/licenses/by/1-0/). 
 
-These open source beneficial ownership data analysis tools aim to help analysts, journalists and anyone wanting to examine and dive into beneficial ownership data published in line with the [Beneficial Ownership Data Standard](https://standard.openownership.org/).
+These open source beneficial ownership data analysis tools help analysts, journalists and anyone wanting to examine and dive into beneficial ownership data published in line with the [Beneficial Ownership Data Standard](https://standard.openownership.org/).
 
 This website was created by [Open Data Services](https://opendataservices.coop/) in partnership with [Open Ownership](https://www.openownership.org/).
 
