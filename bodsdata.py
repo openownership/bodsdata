@@ -762,7 +762,7 @@ def run_flatterer(source, statement_type, sample=None):
     flatterer.flatten(
         flatten_iterator(), 
         f'{output_dir}/{source}/output_{statement_type}', 
-        main_table_name='statement',
+        main_table_name='statement', sql_scripts=True,
         force=True, table_prefix=f'{short_statement_type}_', sqlite=True, sqlite_path=f'{output_dir}/{source}/sqlite.db')
 
 
