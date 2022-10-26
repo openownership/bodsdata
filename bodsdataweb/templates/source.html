@@ -12,9 +12,18 @@
       <div class="card" >
         <div class="card-body">
           <h4 id="downloads" class="card-title serif">Downloads and links to hosted databases</h4> </a>
-          <a href="{{ metadata.csv }}" class="card-link">CSV Download</a>
-          <a href="{{ metadata.sqlite_zip }}" class="card-link">SQLite Download</a>
-          <a href="{{ metadata.pg_dump }}" class="card-link">Postgresql Dump (gzip)</a>
+          <a href="{{ metadata.csv }}" class="card-link" {% if metadata.csv_size %}data-bs-toggle="tooltip" title="{{metadata.csv_size}}"{% endif %}>CSV Download</a>
+          <a href="{{ metadata.sqlite_zip }}" class="card-link" {% if metadata.sqlite_zip_size %}data-bs-toggle="tooltip" title="{{metadata.sqlite_zip_size}}"{% endif %}>SQLite Download</a>
+          <a href="{{ metadata.pg_dump }}" class="card-link" {% if metadata.pg_dump_size %}data-bs-toggle="tooltip" title="{{metadata.pg_dump_size}}"{% endif %}>Postgresql Dump (gzip)</a>
+
+          {% if metadata.json_zip %}
+            <a href="{{ metadata.json_zip }}" class="card-link" {% if metadata.json_zip_size %}data-bs-toggle="tooltip" title="{{metadata.json_zip_size}}"{% endif %}>JSON Lines Download</a>
+          {% endif %}
+
+          {% if metadata.parquet_zip %}
+            <a href="{{ metadata.parquet_zip }}" class="card-link" {% if metadata.parquet_zip_size %}data-bs-toggle="tooltip" title="{{metadata.parquet_zip_size}}"{% endif %}>Parquet Download</a>
+          {% endif %}
+
           <a href="https://console.cloud.google.com/bigquery?project=ocdsdata&p=bodsdata&d={{source}}&page=dataset" class="card-link">Big Query</a>
           <a href="https://bods-data-datasette.openownership.org/{{source}}" class="card-link">Datasette</a>
         </div>

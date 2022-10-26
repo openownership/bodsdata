@@ -13,9 +13,18 @@
              {{ info.description_html|safe }}
           </p>
           <a href="{{ url_for('source', source=source) }}" class="card-link">Field Information</a>
-          <a href="{{ info.csv }}" class="card-link">CSV Download</a>
-          <a href="{{ info.sqlite_zip }}" class="card-link">SQLite Download</a>
-          <a href="{{ info.pg_dump }}" class="card-link">Postgresql Dump (gzip)</a>
+          <a href="{{ info.csv }}" class="card-link" {% if info.csv_size %}data-bs-toggle="tooltip" title="{{info.csv_size}}"{% endif %}>CSV Download</a>
+          <a href="{{ info.sqlite_zip }}" class="card-link" {% if info.sqlite_zip_size %}data-bs-toggle="tooltip" title="{{info.sqlite_zip_size}}"{% endif %}>SQLite Download</a>
+          <a href="{{ info.pg_dump }}" class="card-link" {% if info.pg_dump_size %}data-bs-toggle="tooltip" title="{{info.pg_dump_size}}"{% endif %}>Postgresql Dump (gzip)</a>
+
+          {% if info.json_zip %}
+            <a href="{{ info.json_zip }}" class="card-link" {% if info.json_zip_size %}data-bs-toggle="tooltip" title="{{info.json_zip_size}}"{% endif %}>JSON Lines Download</a>
+          {% endif %}
+
+          {% if info.parquet_zip %}
+            <a href="{{ info.parquet_zip }}" class="card-link" {% if info.parquet_zip_size %}data-bs-toggle="tooltip" title="{{info.parquet_zip_size}}"{% endif %}>Parquet Download</a>
+          {% endif %}
+
           <a href="https://console.cloud.google.com/bigquery?project=ocdsdata&p=bodsdata&d={{source}}&page=dataset" class="card-link">Big Query</a>
           <a href="https://bods-data-datasette.openownership.org/{{source}}" class="card-link">Datasette</a>
         </div>
