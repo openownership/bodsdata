@@ -479,7 +479,7 @@ def upload_s3(filepath, bucket_location, bucket=None):
     )
 
 
-#@retry(tries=5)
+@retry(tries=5)
 def create_parquet(source, upload=False):
     """ Create parquet files 
 
