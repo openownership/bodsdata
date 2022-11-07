@@ -26,7 +26,8 @@ install_requires = [
     "frozen-flask",
     "bootstrap-flask",
     "markdown",
-    "datasette"
+    "datasette",
+    "humanize"
 ]
 
 

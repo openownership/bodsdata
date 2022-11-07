@@ -27,6 +27,7 @@ from retry import retry
 from textwrap import dedent
 import ijson
 import flatterer
+import humanize
 
 
 import boto3
@@ -292,7 +293,7 @@ def export_bigquery(source, parquet_path, table_name):
 
     with open(parquet_path, "rb") as source_file:
         client.load_table_from_file(
-            source_file, table_id, job_config=job_config, size=None, timeout=5
+            source_file, table_id, job_config=job_config, size=None, timeout=50
         )
 
 
@@ -628,9 +629,33 @@ def create_samples(source, upload=False, size=10):
     if upload:
         bucket_location = f"data/{source}/samples.json"
         upload_s3(filepath, bucket_location)
-        shutil.rmtree(f'{output_dir}/{source}/parquet')
     
     return df_output
+
+
+def create_parquet_zip(source, upload=False):
+    print('Create parquet zip')
+    with open(f'{output_dir}/{source}/datapackage.json', 'r') as f:
+        datapackage = json.load(f)
+
+    with zipfile.ZipFile(f'{output_dir}/{source}/parquet.zip', 'w', compression=zipfile.ZIP_DEFLATED) as f_zip:
+        for resource in datapackage['resources']:
+
+            output_file = f'{output_dir}/{source}/parquet/{resource["name"]}.parquet'
+
+            f_zip.write(
+                output_file,
+                arcname=f'{resource["name"]}.parquet',
+            )
+
+            os.unlink(output_file)
+
+        filepath = f'{output_dir}/{source}/parquet.zip'
+
+    if upload:
+        bucket_location = f"data/{source}/parquet.zip"
+        upload_s3(filepath, bucket_location)
+        shutil.rmtree(f'{output_dir}/{source}/parquet')
         
 
 def download_file(url, source, name=None):
@@ -665,7 +690,7 @@ def download_file(url, source, name=None):
             os.remove(filename)
 
 
-def download_files_s3(source, s3_path_pattern, latest=False, bucket="bodsdata-oo"):
+def download_files_s3(source, s3_path_pattern, latest=False, bucket="bodsdata-oo", sample=None):
     """ Download file to form s3 with given regex pattern.
 
     Parameters
@@ -694,9 +719,29 @@ def download_files_s3(source, s3_path_pattern, latest=False, bucket="bodsdata-oo
     if latest and items:
         items = [items[-1]]
 
-    for item in items:
+    for num, item in enumerate(items):
         file_name = item.split('/')[-1]
         bucket.download_file(item, f'{output_dir}/{source}_download/{file_name}')
+        if sample and num == sample:
+            break
+
+
+def json_zip(source, upload=False):
+    print("Making json.zip")
+    with zipfile.ZipFile(f'{output_dir}/{source}/json.zip', 'w', compression=zipfile.ZIP_DEFLATED) as f_zip:
+        with f_zip.open( f'{source}.json', 'w') as output_file: 
+            for item in glob.glob(f'{output_dir}/{source}_download/*'):
+                with open(item, 'rb') as input_file:
+                    for line in input_file:
+                        output_file.write(line)
+
+                os.unlink(item)
+    
+    filepath = f'{output_dir}/{source}/json.zip'
+    if upload:
+        bucket_location = f"data/{source}/json.zip"
+        upload_s3(filepath, bucket_location)
+        os.unlink(filepath)
 
 
 def remove_download(source):
@@ -834,17 +879,25 @@ def publish_metadata(source, title="", description="", upload=True):
         if parts[0] != 'data' or parts[1] != source:
             continue
 
-
         if file_name.endswith("csv.zip"):
             out["csv"] = item_url
+            out["csv_size"] =  humanize.naturalsize(item.size)
         if file_name.endswith("sqlite.zip"):
             out["sqlite_zip"] = item_url
+            out["sqlite_zip_size"] =  humanize.naturalsize(item.size)
         if file_name.endswith("sqlite.db.gz"):
             out["sqlite_gzip"] = item_url
+            out["sqlite_gzip_size"] =  humanize.naturalsize(item.size)
         if file_name.endswith("sql.gz"):
             out["pg_dump"] = item_url
-        if file_name.endswith("parquet"):
-            out["parquet"][file_name] = item_url
+            out["pg_dump_size"] =  humanize.naturalsize(item.size)
+        if file_name.endswith("parquet.zip"):
+            out["parquet_zip"] = item_url
+            out["parquet_zip_size"] =  humanize.naturalsize(item.size)
+        if file_name.endswith("json.zip"):
+            out["json_zip"] = item_url
+            out["json_zip_size"] =  humanize.naturalsize(item.size)
+
 
     with open(f'{output_dir}/{source}/datapackage.json') as samples_file:
         out['datapackage'] = json.load(samples_file)
