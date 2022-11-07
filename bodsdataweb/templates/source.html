@@ -17,7 +17,7 @@
           <a href="{{ metadata.pg_dump }}" class="card-link" {% if metadata.pg_dump_size %}data-bs-toggle="tooltip" title="{{metadata.pg_dump_size}}"{% endif %}>Postgresql Dump (gzip)</a>
 
           {% if metadata.json_zip %}
-            <a href="{{ metadata.json_zip }}" class="card-link" {% if metadata.json_zip_size %}data-bs-toggle="tooltip" title="{{metadata.json_zip_size}}"{% endif %}>JSON Lines Download</a>
+            <a href="{{ metadata.json_zip }}" class="card-link" {% if metadata.json_zip_size %}data-bs-toggle="tooltip" title="{{metadata.json_zip_size}}"{% endif %}>JSON Download</a>
           {% endif %}
 
           {% if metadata.parquet_zip %}
