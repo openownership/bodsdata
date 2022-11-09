@@ -729,7 +729,7 @@ def download_files_s3(source, s3_path_pattern, latest=False, bucket="bodsdata-oo
 def json_zip(source, upload=False):
     print("Making json.zip")
     with zipfile.ZipFile(f'{output_dir}/{source}/json.zip', 'w', compression=zipfile.ZIP_DEFLATED) as f_zip:
-        with f_zip.open( f'{source}.json', 'w') as output_file: 
+        with f_zip.open( f'{source}.json', 'w', force_zip64=True) as output_file: 
             for item in glob.glob(f'{output_dir}/{source}_download/*'):
                 with open(item, 'rb') as input_file:
                     for line in input_file:
