@@ -981,5 +981,45 @@ def update_website():
     requests.get(os.environ['RENDER_WEB_DEPLOY_HOOK'])
 
 
+def run_pipeline(source, title, description, download, upload, bucket = ''):
+    """ Run the entire bodsdata pipeline and (optionally) update website for a single source
+    Parameters
+    ----------
+    source: string
+        Data Source Name
+    title: string
+        Data source title for website
+    description: string
+        Data source description for website
+    download: string
+        either a url containing the source data download location
+        or a path pattern to search within an s3 bucket
+    upload: bool
+        Upload to s3 bucket and delete local file, and update website
+    bucket: string
+        optional name of s3 bucket containing the source data
+    """
+    remove_download(source)
+    if bucket != '':
+        download_files_s3(s3_path_pattern=download, source=source, latest=False, bucket=bucket)
+    else:
+        download_file(download, source=source)
+    remove_output(source)
+    flatten(source, False)
+    json_zip(source, upload)
+    sqlite_zip(source, upload)
+    sqlite_gzip(source, upload)
+    refresh_bigquery(source)
+    create_parquet(source, upload)
+    create_samples(source, upload)
+    create_parquet_zip(source, upload)
+    create_pgdump(source, upload)
+    datapackage(source, upload)
+    make_datasette_infofile(source)
+    if upload:
+        publish_metadata(source, title=title, description=description)
+        update_website()
+
+
 if __name__ == "__main__":
     cli()
