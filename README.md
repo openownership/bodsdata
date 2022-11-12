@@ -1,5 +1,7 @@
 # Beneficial ownership data analysis tools
 
+Data analysis tools to help analysts, journalists and anyone wanting to examine and dive into beneficial ownership data published in line with the Beneficial Ownership Data Standard.
+
 ## Install
 
 ```bash
