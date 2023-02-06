@@ -378,6 +378,7 @@ polars_type_lookup = {
     "null": polars.Utf8,
     "number": polars.Float64,
     "boolean": polars.Boolean,
+    "integer": polars.Int64,
 }
 
 duckdb_lookup = {
@@ -388,7 +389,7 @@ duckdb_lookup = {
     "null": "text",
     "number": "double",
     "boolean": "bool",
-    "integer": "text",
+    "integer": "integer",
 }
 
 
