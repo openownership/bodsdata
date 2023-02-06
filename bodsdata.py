@@ -388,6 +388,7 @@ duckdb_lookup = {
     "null": "text",
     "number": "double",
     "boolean": "bool",
+    "integer": "integer",
 }
 
 
