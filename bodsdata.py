@@ -723,7 +723,15 @@ def download_files_s3(source, s3_path_pattern, latest=False, bucket="bodsdata-oo
 
     for num, item in enumerate(items):
         file_name = item.split('/')[-1]
-        bucket.download_file(item, f'{output_dir}/{source}_download/{file_name}')
+        download_path = f'{output_dir}/{source}_download/{file_name}'
+        bucket.download_file(item, download_path)
+
+        if not download_path.endswith('.gz'):
+            with open(download_path, 'rb') as f_in:
+                with gzip.open(f'{download_path}.gz', 'wb') as f_out:
+                    shutil.copyfileobj(f_in, f_out)
+            os.remove(download_path)
+
         if sample and num == sample:
             break
 
