@@ -493,32 +493,13 @@ def create_parquet(source, upload=False):
         Upload to s3 bucket and delete local files.
     """
     print("Creating parquet")
-    if upload:
-        print("and uploading to bigquery")
-
-    os.makedirs(f'{output_dir}/{source}/parquet', exist_ok=True)
-    con = duckdb.connect()
-    con.execute("PRAGMA memory_limit='1GB'")
 
     with open(f'{output_dir}/{source}/datapackage.json', 'r') as f:
         datapackage = json.load(f)
 
     for resource in datapackage['resources']:
-        columns = {}
-        for field in resource['schema']['fields']:
-            columns[field['name']] = duckdb_lookup[field["type"]]
         
         filepath = f"{output_dir}/{source}/parquet/{resource['name']}.parquet"
-
-        con.execute(f'''
-            COPY (
-                SELECT 
-                    * 
-                FROM 
-                    read_csv('{output_dir}/{source}/{resource['path']}', header=True, columns = {repr(columns)})
-                )    
-                TO '{filepath}' (FORMAT 'parquet');  
-        ''')
 
         if upload:
             bucket_location = f"data/{source}/parquet/{resource['name']}.parquet"
@@ -818,7 +799,8 @@ def run_flatterer(source, statement_type, sample=None):
         flatten_iterator(), 
         f'{output_dir}/{source}/output_{statement_type}', 
         main_table_name='statement', sql_scripts=True,
-        force=True, table_prefix=f'{short_statement_type}_', sqlite=True, sqlite_path=f'{output_dir}/{source}/sqlite.db')
+        force=True, table_prefix=f'{short_statement_type}_', parquet=True, 
+        sqlite=True, sqlite_path=f'{output_dir}/{source}/sqlite.db')
 
 
 def flatten(source, sample=None):
@@ -839,6 +821,11 @@ def flatten(source, sample=None):
 
     for item in glob.glob(f'{output_dir}/{source}/*/csv/*.csv'):
         shutil.move(item, f"{output_dir}/{source}/csv/{item.split('/')[-1]}")
+
+    os.makedirs(f'{output_dir}/{source}/parquet', exist_ok=True)
+
+    for item in glob.glob(f'{output_dir}/{source}/*/parquet/*.parquet'):
+        shutil.move(item, f"{output_dir}/{source}/parquet/{item.split('/')[-1]}")
 
     datapackage = {"profile": "tabular-data-package", "resources": []}
 
