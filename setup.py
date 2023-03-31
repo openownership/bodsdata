@@ -8,7 +8,7 @@ install_requires = [
     "fabric",
     "requests",
     "polars",
-    "duckdb",
+    "duckdb<0.7",
     "alembic",
     "orjson",
     "sqlalchemy",
