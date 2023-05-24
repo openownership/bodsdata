@@ -722,7 +722,7 @@ def json_zip(source, upload=False):
     with zipfile.ZipFile(f'{output_dir}/{source}/json.zip', 'w', compression=zipfile.ZIP_DEFLATED) as f_zip:
         with f_zip.open( f'{source}.json', 'w', force_zip64=True) as output_file: 
             for item in glob.glob(f'{output_dir}/{source}_download/*'):
-                with open(item, 'rb') as input_file:
+                with gzip.open(item, 'rb') as input_file:
                     for line in input_file:
                         output_file.write(line)
 
