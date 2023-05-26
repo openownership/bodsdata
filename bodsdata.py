@@ -927,7 +927,7 @@ def publish_metadata(source, title="", description="", upload=True):
         upload_s3(filepath, bucket_location)
 
 
-def make_datasette_infofile(source):
+def make_datasette_infofile(source, upload=True):
     output = subprocess.run(["datasette", "inspect", f'{output_dir}/{source}/sqlite.db'], text=True, capture_output=True)
     inspect_data = json.loads(output.stdout)
     inspect_data["sqlite"]["file"] = f"{source}.db"
@@ -937,7 +937,8 @@ def make_datasette_infofile(source):
     with open(filepath, 'w+') as inspect_file:
         json.dump(inspect_data, inspect_file)
 
-    upload_s3(filepath, f"data/{source}/inspect-data.json")
+    if upload:
+        upload_s3(filepath, f"data/{source}/inspect-data.json")
 
 
 def publish_datasettes():
