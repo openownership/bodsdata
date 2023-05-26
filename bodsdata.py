@@ -45,6 +45,7 @@ from googleapiclient.http import MediaFileUpload
 from jsonref import JsonRef
 from openpyxl.cell.cell import ILLEGAL_CHARACTERS_RE
 
+from consistancy_checks import ConsistencyChecks
 
 this_path = Path(__file__).parent.absolute()
 
@@ -717,6 +718,21 @@ def download_files_s3(source, s3_path_pattern, latest=False, bucket="bodsdata-oo
             break
 
 
+def check_data_consistency(source):
+    """ Run consistency checks on input data.
+
+    Parameters
+    ----------
+    source : string
+        Data Source Name
+    """
+
+    source_dir = f'{output_dir}/{source}_download/'
+
+    check = ConsistencyChecks(source_dir)
+    check.run()
+
+
 def json_zip(source, upload=False):
     print("Making json.zip")
     with zipfile.ZipFile(f'{output_dir}/{source}/json.zip', 'w', compression=zipfile.ZIP_DEFLATED) as f_zip:
@@ -1002,6 +1018,7 @@ def run_pipeline(source, title, description, download, upload, bucket = ''):
         download_files_s3(s3_path_pattern=download, source=source, latest=False, bucket=bucket)
     else:
         download_file(download, source=source)
+    check_data_consistency(source)
     remove_output(source)
     flatten(source, False)
     json_zip(source, upload)
