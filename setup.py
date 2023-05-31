@@ -27,7 +27,7 @@ install_requires = [
     "bootstrap-flask",
     "markdown",
     "datasette",
-    "humanize"
+    "humanize",
     "rich"
 ]
 
