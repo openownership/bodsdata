@@ -6,12 +6,82 @@ import zipfile
 import json
 import pandas as pd
 import gzip
+from unittest.mock import patch, Mock
+import shutil
+import types
 
 import bodsdata
 
+def copy_file(src, dest):
+    print("copy_file:", src, dest)
+    shutil.copy(src, dest)
+
+
+class TestDownloadFile:
+    """Test download of single file"""
+    source = 'test-source0'
+
+    @pytest.fixture(scope="class")
+    def test_dir(self, tmp_path_factory):
+        """Fixture to create temporary directory"""
+        return tmp_path_factory.getbasetemp()
+
+    @pytest.fixture(scope="class")
+    def output_dir(self, test_dir):
+        """Fixture to create temporary directory"""
+        output_dir = Path(test_dir) / self.source
+        output_dir.mkdir()
+        return output_dir
+
+    def test_download_files_s3(self, test_dir, output_dir):
+        """Test downloading single input file"""
+        with patch('bodsdata.get_s3_bucket') as mock_get_s3_bucket:
+            download = 'tests/fixtures/gzip/test-bods-data-1.json.gz'
+            mock_bucket = Mock()
+            mock_bucket.objects.all.return_value = [types.SimpleNamespace(key=download)]
+            mock_bucket.download_file.side_effect = copy_file
+            mock_get_s3_bucket.return_value = mock_bucket
+            bucket = 'oo-register-v2'
+            bodsdata.output_dir = test_dir
+            bodsdata.download_files_s3(s3_path_pattern=download, source=self.source, latest=False, bucket=bucket)
+            assert (test_dir / f"{self.source}_download" / "test-bods-data-1.json.gz").is_file()
+
+
+class TestDownloadDirectory:
+    """Test download of single file"""
+    source = 'test-source1'
+
+    @pytest.fixture(scope="class")
+    def test_dir(self, tmp_path_factory):
+        """Fixture to create temporary directory"""
+        return tmp_path_factory.getbasetemp()
+
+    @pytest.fixture(scope="class")
+    def output_dir(self, test_dir):
+        """Fixture to create temporary directory"""
+        output_dir = Path(test_dir) / self.source
+        output_dir.mkdir()
+        return output_dir
+
+    def test_download_files_s3(self, test_dir, output_dir):
+        """Test downloading directory of input files"""
+        with patch('bodsdata.get_s3_bucket') as mock_get_s3_bucket:
+            download = 'tests/fixtures/gzip'
+            mock_bucket = Mock()
+            mock_bucket.objects.all.return_value = [types.SimpleNamespace(key=str(d)) for d in Path(download).iterdir()]
+            mock_bucket.download_file.side_effect = copy_file
+            mock_get_s3_bucket.return_value = mock_bucket
+            bucket = 'oo-register-v2'
+            bodsdata.output_dir = test_dir
+            bodsdata.download_files_s3(s3_path_pattern=download, source=self.source, latest=False, bucket=bucket)
+            for d in Path(download).iterdir():
+                file_name = str(d).split('/')[-1]
+                assert (test_dir / f"{self.source}_download" / file_name).is_file()
+
+
 class TestPipeline:
     """Test pipeline stages"""
-    source = 'test-source1'
+    source = 'test-source2'
 
     @pytest.fixture(scope="class")
     def test_dir(self, tmp_path_factory):
@@ -142,16 +212,16 @@ class TestPipeline:
         with open(output_dir / 'inspect-data.json') as output_file:
             json_data = json.load(output_file)
             print(json_data)
-            assert json_data['test-source1']['file'] == 'test-source1.db'
-            assert json_data['test-source1']['tables']['person_statement']['count'] == 4
-            assert json_data['test-source1']['tables']['person_identifiers']['count'] == 8
-            assert json_data['test-source1']['tables']['ooc_statement']['count'] == 16
-            assert json_data['test-source1']['tables']['ooc_interests']['count'] == 14
+            assert json_data['test-source2']['file'] == 'test-source2.db'
+            assert json_data['test-source2']['tables']['person_statement']['count'] == 4
+            assert json_data['test-source2']['tables']['person_identifiers']['count'] == 8
+            assert json_data['test-source2']['tables']['ooc_statement']['count'] == 16
+            assert json_data['test-source2']['tables']['ooc_interests']['count'] == 14
 
 
 class TestConsistencyPass:
     """Test data consistency checks success"""
-    source = 'test-source2'
+    source = 'test-source3'
 
     @pytest.fixture(scope="class")
     def test_dir(self, tmp_path_factory):
@@ -180,7 +250,7 @@ class TestConsistencyPass:
 
 class TestConsistencyFail:
     """Test data consistency checks failure"""
-    source = 'test-source3'
+    source = 'test-source4'
 
     @pytest.fixture(scope="class")
     def test_dir(self, tmp_path_factory):

@@ -25,3 +25,4 @@ markdown
 datasette
 humanize
 fastparquet
+rich

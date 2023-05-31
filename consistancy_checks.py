@@ -2,6 +2,7 @@ import json
 import gzip
 import random
 from pathlib import Path
+from rich.console import Console
 
 def map_statement_type(statement_type):
     """Map statement type to shorter version"""
@@ -22,6 +23,8 @@ class ConsistencyChecks:
         self.hours = hours
         self.gzip = gzip
         self.check_is_component = check_is_component
+        self.error_log = []
+        self.console = Console()
 
     def statement_stats(self, statement):
         """Create stats data for BODs statement"""
@@ -36,31 +39,37 @@ class ConsistencyChecks:
             elif "describedByEntityStatement" in statement["interestedParty"]:
                 self.references.add(statement["interestedParty"]["describedByEntityStatement"])
 
+    def perform_check(self, check, message):
+        """Perform check and log if there is an error"""
+        if not check:
+            self.error_log.append(message)
+
     def check_statement(self, statement):
         """Check BODS statement fields"""
-        assert 'statementID' in statement, f"No statementID in statement: {statement}"
-        assert 'statementType' in statement, f"No statementType in statement: {statement}"
-        assert 'publicationDetails' in statement, f"No publicationDetails in statement: {statement}"
-        assert 'publicationDate' in statement['publicationDetails'], f"No publicationDetails/publicationDate in statement: {statement}"
-        assert 'bodsVersion' in statement['publicationDetails'], f"No publicationDetails/bodsVersion in statement: {statement}"
-        if self.check_is_component: assert 'isComponent' in statement, f"No isComponent in statement: {statement}"
+        self.perform_check('statementID' in statement, f"Missing BODS field: No statementID in statement: {statement}")
+        self.perform_check('statementType' in statement, f"Missing BODS field: No statementType in statement: {statement}")
+        self.perform_check('publicationDetails' in statement, f"Missing BODS field: No publicationDetails in statement: {statement}")
+        self.perform_check('publicationDate' in statement['publicationDetails'], f"Missing BODS field: No publicationDetails/publicationDate in statement: {statement}")
+        self.perform_check('bodsVersion' in statement['publicationDetails'], f"Missing BODS field: No publicationDetails/bodsVersion in statement: {statement}")
+        if self.check_is_component:
+            self.perform_check('isComponent' in statement, f"Missing BODS field: No isComponent in statement: {statement}")
         if statement['statementType'] == "personStatement":
-            assert 'personType' in statement, f"No personType in person statement: {statement}"
+            self.perform_check('personType' in statement, f"Missing BODS field: No personType in person statement: {statement}")
             if statement['personType'] in ('anonymousPerson', 'unknownPerson'):
-                assert 'reason' in statement['unspecifiedPersonDetails'], \
-                        f"No reason for person statement with {statement['personType']} personType: {statement}"
+                self.perform_check('reason' in statement['unspecifiedPersonDetails'], \
+                        f"Missing BODS field: No reason for person statement with {statement['personType']} personType: {statement}")
         elif statement['statementType'] == "entityStatement":
-            assert 'entityType' in statement, f"No entityType in entity statement: {statement}"
+            self.perform_check('entityType' in statement, f"Missing BODS field: No entityType in entity statement: {statement}")
             if statement['entityType'] in ('anonymousEntity' or 'unknownEntity'):
-                assert 'reason' in statement['unspecifiedEntityDetails'], \
-                        f"No reason for entity statement with {statement['entityType']} entityType: {statement}"
+                self.perform_check('reason' in statement['unspecifiedEntityDetails'], \
+                        f"Missing BODS field: No reason for entity statement with {statement['entityType']} entityType: {statement}")
         elif statement['statementType'] == "ownershipOrControlStatement":
-            assert 'subject' in statement, f"No subject in ownershipOrControlStatement: {statement}"
-            assert 'describedByEntityStatement' in statement['subject'], \
-                    f"No subject/describedByEntityStatement in ownershipOrControlStatement: {statement}"
-            assert 'interestedParty' in statement, f"No interestedParty in ownershipOrControlStatement: {statement}"
+            self.perform_check('subject' in statement, f"Missing BODS field: No subject in ownershipOrControlStatement: {statement}")
+            self.perform_check('describedByEntityStatement' in statement['subject'], \
+                    f"Missing BODS field: No subject/describedByEntityStatement in ownershipOrControlStatement: {statement}")
+            self.perform_check('interestedParty' in statement, f"Missing BODS field: No interestedParty in ownershipOrControlStatement: {statement}")
         else:
-            assert False, f"Incorrect statementType for statement: {statement}"
+            self.perform_check(False, f"BODS field value: Incorrect statementType for statement: {statement}")
 
     def read_json_file(self, f):
         """Read from JSON Lines file and yield items"""
@@ -109,16 +118,46 @@ class ConsistencyChecks:
         """Check internal references within BODS data"""
         print("Checking internal references with BODS data")
         for reference in self.references:
-            assert reference in self.stats[1]['entity'] or reference in self.stats[1]['person'], f"Statement {reference} not found in input data"
+            self.perform_check(reference in self.stats[1]['entity'] or reference in self.stats[1]['person'],
+                               f"BODS referencing error: Statement {reference} not found in input data")
 
     def check_stats(self):
         """Check statistics for data"""
-        assert len(self.stats) == 1 and next(iter(self.stats)) == 1, "Duplicate statementIDs in input data"
+        self.perform_check(len(self.stats) == 1 and next(iter(self.stats)) == 1,
+                           "BODS duplicate error: Duplicate statementIDs in input data")
         self.check_references()
-        print(self.references)
+        #print(self.references)
+
+    def error_stats(self):
+        """Generate error statistics"""
+        stats = {"missing": 0, "duplicate": 0, "reference": 0}
+        for error in self.error_log:
+            if error.startswith("Missing"): stats["missing"] += 1
+            elif error.startswith("BODS duplicate"): stats["duplicate"] += 1
+            elif error.startswith("BODS referencing"): stats["reference"] += 1
+        return stats
+
+    def process_errors(self):
+        """Check for any errors in log"""
+        for error in self.error_log:
+            self.console.print(error, style="red")
+        if len(self.error_log) > 0:
+            stats = self.error_stats()
+            estats = []
+            for e in stats:
+                if stats[e] > 0: estats.append(f"{stats[e]} {e}")
+            estats = ", ".join(estats)
+            if len(self.error_log) < 5:
+                examples = ", ".join(self.error_log)
+            else:
+                examples = ", ".join(self.error_log[:5])
+            estats += f" ({examples})"
+            message = f"Consistency checks failed: {estats}"
+            raise AssertionError(message)
 
     def run(self):
         """Run consistency checks"""
         self.read_data()
         self.generate_stats()
         self.check_stats()
+        self.process_errors()
