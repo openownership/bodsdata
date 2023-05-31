@@ -1026,7 +1026,7 @@ def run_pipeline(source, title, description, download, upload, bucket = '', chec
     json_zip(source, upload)
     sqlite_zip(source, upload)
     sqlite_gzip(source, upload)
-    refresh_bigquery(source)
+    if upload: refresh_bigquery(source)
     create_parquet(source, upload)
     create_samples(source, upload)
     create_parquet_zip(source, upload)

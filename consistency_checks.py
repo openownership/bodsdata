@@ -145,7 +145,6 @@ class ConsistencyChecks:
                            "BODS duplicate error: Duplicate statementIDs in input data",
                            extra_errors=self.output_duplicates)
         self.check_references()
-        print("References:", self.references)
 
     def error_stats(self):
         """Generate error statistics"""
