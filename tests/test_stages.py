@@ -13,7 +13,6 @@ import types
 import bodsdata
 
 def copy_file(src, dest):
-    print("copy_file:", src, dest)
     shutil.copy(src, dest)
 
 
@@ -195,7 +194,6 @@ class TestPipeline:
         bodsdata.datapackage(self.source)
         with zipfile.ZipFile(output_dir / "csv.zip") as datapackage_zip:
             files = datapackage_zip.namelist()
-            print(files)
             assert 'csv/person_addresses.csv' in files
             assert 'csv/person_nationalities.csv' in files
             assert 'csv/person_names.csv' in files
@@ -280,3 +278,34 @@ class TestConsistencyFail:
         except AssertionError as exception:
             assert "14516809276187145413" in str(exception)
 
+class TestConsistencyDuplicates:
+    """Test data consistency checks with duplicates"""
+    source = 'test-source5'
+
+    @pytest.fixture(scope="class")
+    def test_dir(self, tmp_path_factory):
+        """Fixture to create temporary directory"""
+        return tmp_path_factory.getbasetemp()
+
+    @pytest.fixture(scope="class")
+    def output_dir(self, test_dir):
+        """Fixture to create temporary directory"""
+        output_dir = Path(test_dir) / self.source
+        output_dir.mkdir()
+        return output_dir
+
+    @pytest.fixture(scope="class")
+    def source_dir(self, test_dir):
+        """Fixture to create and populate source directory"""
+        source_dir = Path(test_dir) / f"{self.source}_download"
+        copy_tree("tests/fixtures/checks-3", str(source_dir))
+        return source_dir
+
+    def test_check_data_consistency(self, test_dir, output_dir, source_dir):
+        """Test data consistency checks"""
+        bodsdata.output_dir = test_dir
+        try:
+            bodsdata.check_data_consistency(self.source)
+            assert False, "Checks failed to detect issues"
+        except AssertionError as exception:
+            assert "11999711770514058937" in str(exception)

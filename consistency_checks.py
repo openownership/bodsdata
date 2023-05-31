@@ -39,10 +39,13 @@ class ConsistencyChecks:
             elif "describedByEntityStatement" in statement["interestedParty"]:
                 self.references.add(statement["interestedParty"]["describedByEntityStatement"])
 
-    def perform_check(self, check, message):
+    def perform_check(self, check, message, extra_errors=False):
         """Perform check and log if there is an error"""
         if not check:
-            self.error_log.append(message)
+            if extra_errors:
+                extra_errors(message)
+            else:
+                self.error_log.append(message)
 
     def check_statement(self, statement):
         """Check BODS statement fields"""
@@ -114,19 +117,35 @@ class ConsistencyChecks:
             self.stats[self.statements[statement]['count']]['count'] += 1
             self.stats[self.statements[statement]['count']][self.statements[statement]['type']].add(statement)
 
+    def check_reference(self, reference):
+        """Check internal reference exists"""
+        found = False
+        for s in self.stats:
+            if reference in self.stats[s]['entity'] or reference in self.stats[s]['person']:
+                found = True
+                break
+        return found
+
     def check_references(self):
         """Check internal references within BODS data"""
         print("Checking internal references with BODS data")
         for reference in self.references:
-            self.perform_check(reference in self.stats[1]['entity'] or reference in self.stats[1]['person'],
+            self.perform_check(self.check_reference(reference),
                                f"BODS referencing error: Statement {reference} not found in input data")
+
+    def output_duplicates(self, message):
+        for d in self.stats:
+            if d > 1:
+                for s in self.stats[d]['ownership'] | self.stats[d]['entity'] | self.stats[d]['person']:
+                    self.error_log.append(f"{message} ({s})")
 
     def check_stats(self):
         """Check statistics for data"""
         self.perform_check(len(self.stats) == 1 and next(iter(self.stats)) == 1,
-                           "BODS duplicate error: Duplicate statementIDs in input data")
+                           "BODS duplicate error: Duplicate statementIDs in input data",
+                           extra_errors=self.output_duplicates)
         self.check_references()
-        #print(self.references)
+        print("References:", self.references)
 
     def error_stats(self):
         """Generate error statistics"""

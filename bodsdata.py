@@ -995,7 +995,7 @@ def update_website():
     requests.get(os.environ['RENDER_WEB_DEPLOY_HOOK'])
 
 
-def run_pipeline(source, title, description, download, upload, bucket = ''):
+def run_pipeline(source, title, description, download, upload, bucket = '', check = True):
     """ Run the entire bodsdata pipeline and (optionally) update website for a single source
     Parameters
     ----------
@@ -1012,13 +1012,15 @@ def run_pipeline(source, title, description, download, upload, bucket = ''):
         Upload to s3 bucket and delete local file, and update website
     bucket: string
         optional name of s3 bucket containing the source data
+    check: bool
+        optionally disable data consistency checks
     """
     remove_download(source)
     if bucket != '':
         download_files_s3(s3_path_pattern=download, source=source, latest=False, bucket=bucket)
     else:
         download_file(download, source=source)
-    check_data_consistency(source)
+    if check: check_data_consistency(source)
     remove_output(source)
     flatten(source, False)
     json_zip(source, upload)
