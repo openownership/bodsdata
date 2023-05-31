@@ -45,7 +45,7 @@ from googleapiclient.http import MediaFileUpload
 from jsonref import JsonRef
 from openpyxl.cell.cell import ILLEGAL_CHARACTERS_RE
 
-from consistancy_checks import ConsistencyChecks
+from consistency_checks import ConsistencyChecks
 
 this_path = Path(__file__).parent.absolute()
 
