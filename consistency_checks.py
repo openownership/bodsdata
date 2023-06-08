@@ -12,8 +12,9 @@ def map_statement_type(statement_type):
 
 class ConsistencyChecks:
     """Perform consistancy check on BODS data"""
-    def __init__(self, source_dir, dates=False, hours=False, gzip=True, check_is_component=True):
-        """Initialise"""
+    def __init__(self, source_dir, dates=False, hours=False, gzip=True, check_is_component=True,
+                         check_missing_fields=True, check_statement_dups=True, check_statement_refs=True):
+        """Initialise checks"""
         print("Initialising consistency checks on data")
         self.statements = {}
         self.references = set()
@@ -22,7 +23,10 @@ class ConsistencyChecks:
         self.dates = dates
         self.hours = hours
         self.gzip = gzip
+        self.check_missing_fields = check_missing_fields
         self.check_is_component = check_is_component
+        self.check_statement_dups = check_statement_dups
+        self.check_statement_refs = check_statement_refs
         self.error_log = []
         self.console = Console()
 
@@ -88,7 +92,7 @@ class ConsistencyChecks:
     def process_file(self, f):
         """Process input file"""
         for statement in self.read_json_file(f):
-            self.check_statement(statement)
+            if self.check_missing_fields: self.check_statement(statement)
             self.statement_stats(statement)
 
     def read_data(self):
@@ -134,6 +138,7 @@ class ConsistencyChecks:
                                f"BODS referencing error: Statement {reference} not found in input data")
 
     def output_duplicates(self, message):
+        """Log duplicate statementIDs"""
         for d in self.stats:
             if d > 1:
                 for s in self.stats[d]['ownership'] | self.stats[d]['entity'] | self.stats[d]['person']:
@@ -141,10 +146,11 @@ class ConsistencyChecks:
 
     def check_stats(self):
         """Check statistics for data"""
-        self.perform_check(len(self.stats) == 1 and next(iter(self.stats)) == 1,
+        if self.check_statement_dups:
+            self.perform_check(len(self.stats) == 1 and next(iter(self.stats)) == 1,
                            "BODS duplicate error: Duplicate statementIDs in input data",
                            extra_errors=self.output_duplicates)
-        self.check_references()
+        if self.check_statement_refs: self.check_references()
 
     def error_stats(self):
         """Generate error statistics"""
@@ -154,6 +160,17 @@ class ConsistencyChecks:
             elif error.startswith("BODS duplicate"): stats["duplicate"] += 1
             elif error.startswith("BODS referencing"): stats["reference"] += 1
         return stats
+
+    def skip_errors(self, stats):
+        """Skip any known errors"""
+        if stats["missing"] > 0 and not stats["missing"] == self.check_missing_fields:
+            return False
+        elif stats["duplicate"] > 0 and not stats["duplicate"] == self.check_statement_dups:
+            return False
+        elif stats["duplicate"] > 0 and not stats["duplicate"] == self.check_statement_refs:
+            return False
+        else:
+            return True
 
     def process_errors(self):
         """Check for any errors in log"""

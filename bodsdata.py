@@ -718,20 +718,28 @@ def download_files_s3(source, s3_path_pattern, latest=False, bucket="bodsdata-oo
             break
 
 
-def check_data_consistency(source, check_is_component=True):
+def check_data_consistency(source, check_missing_fields=True, check_is_component=True,
+                                          check_statement_dups=True, check_statement_refs=True):
     """ Run consistency checks on input data.
 
     Parameters
     ----------
     source : string
         Data Source Name
+    check_missing_fields : bool
+        Optionally disable checking for missing required field in statements
     check_is_component : bool
         Optionally disable checking for isComponent in statements
+    check_statement_dups : bool
+        Optionally disable checking for duplicate statementIDs
+    check_statement_refs : bool
+        Optionally disable checking for reference to missing statements
     """
 
     source_dir = f'{output_dir}/{source}_download/'
 
-    check = ConsistencyChecks(source_dir, check_is_component=check_is_component)
+    check = ConsistencyChecks(source_dir, check_missing_fields=check_missing_fields, check_is_component=check_is_component,
+                                          check_statement_dups=check_statement_dups, check_statement_refs=check_statement_refs)
     check.run()
 
 
@@ -997,7 +1005,8 @@ def update_website():
     requests.get(os.environ['RENDER_WEB_DEPLOY_HOOK'])
 
 
-def run_pipeline(source, title, description, download, upload, bucket = '', check = True, check_is_component = True):
+def run_pipeline(source, title, description, download, upload, bucket = '', check = True, check_missing_fields=True,
+                  check_is_component=True, check_duplicates=True, check_references=True):
     """ Run the entire bodsdata pipeline and (optionally) update website for a single source
     Parameters
     ----------
@@ -1024,7 +1033,9 @@ def run_pipeline(source, title, description, download, upload, bucket = '', chec
         download_files_s3(s3_path_pattern=download, source=source, latest=False, bucket=bucket)
     else:
         download_file(download, source=source)
-    if check: check_data_consistency(source, check_is_component=check_is_component)
+    if check: check_data_consistency(source, check_missing_fields=check_missing_fields,
+                                             check_is_component=check_is_component, check_statement_dups=check_statement_dups,
+                                             check_statement_refs=check_statement_refs)
     remove_output(source)
     flatten(source, False)
     json_zip(source, upload)
@@ -1044,3 +1055,4 @@ def run_pipeline(source, title, description, download, upload, bucket = '', chec
 
 if __name__ == "__main__":
     cli()
+
