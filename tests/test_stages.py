@@ -278,6 +278,7 @@ class TestConsistencyFail:
         except AssertionError as exception:
             assert "14516809276187145413" in str(exception)
 
+
 class TestConsistencyDuplicates:
     """Test data consistency checks with duplicates"""
     source = 'test-source5'
@@ -309,3 +310,131 @@ class TestConsistencyDuplicates:
             assert False, "Checks failed to detect issues"
         except AssertionError as exception:
             assert "11999711770514058937" in str(exception)
+
+
+class TestConsistencyReference:
+    """Test data consistency checks with referencing issue"""
+    source = 'test-source6'
+
+    @pytest.fixture(scope="class")
+    def test_dir(self, tmp_path_factory):
+        """Fixture to create temporary directory"""
+        return tmp_path_factory.getbasetemp()
+
+    @pytest.fixture(scope="class")
+    def output_dir(self, test_dir):
+        """Fixture to create temporary directory"""
+        output_dir = Path(test_dir) / self.source
+        output_dir.mkdir()
+        return output_dir
+
+    @pytest.fixture(scope="class")
+    def source_dir(self, test_dir):
+        """Fixture to create and populate source directory"""
+        source_dir = Path(test_dir) / f"{self.source}_download"
+        copy_tree("tests/fixtures/checks-4", str(source_dir))
+        return source_dir
+
+    def test_check_data_consistency(self, test_dir, output_dir, source_dir):
+        """Test data consistency checks"""
+        bodsdata.output_dir = test_dir
+        try:
+            bodsdata.check_data_consistency(self.source)
+            assert False, "Checks failed to detect issues"
+        except AssertionError as exception:
+            assert "12167039970933723582" in str(exception)
+
+
+class TestConsistencyFields:
+    """Test data consistency checks with missing required field"""
+    source = 'test-source7'
+
+    @pytest.fixture(scope="class")
+    def test_dir(self, tmp_path_factory):
+        """Fixture to create temporary directory"""
+        return tmp_path_factory.getbasetemp()
+
+    @pytest.fixture(scope="class")
+    def output_dir(self, test_dir):
+        """Fixture to create temporary directory"""
+        output_dir = Path(test_dir) / self.source
+        output_dir.mkdir()
+        return output_dir
+
+    @pytest.fixture(scope="class")
+    def source_dir(self, test_dir):
+        """Fixture to create and populate source directory"""
+        source_dir = Path(test_dir) / f"{self.source}_download"
+        copy_tree("tests/fixtures/checks-5", str(source_dir))
+        return source_dir
+
+    def test_check_data_consistency(self, test_dir, output_dir, source_dir):
+        """Test data consistency checks"""
+        bodsdata.output_dir = test_dir
+        try:
+            bodsdata.check_data_consistency(self.source)
+            assert False, "Checks failed to detect issues"
+        except AssertionError as exception:
+            assert "11999711770514058937" in str(exception)
+
+
+class TestConsistencyIgnore:
+    """Test data consistency checks ignoring specific number of errors"""
+    source = 'test-source8'
+
+    @pytest.fixture(scope="class")
+    def test_dir(self, tmp_path_factory):
+        """Fixture to create temporary directory"""
+        return tmp_path_factory.getbasetemp()
+
+    @pytest.fixture(scope="class")
+    def output_dir(self, test_dir):
+        """Fixture to create temporary directory"""
+        output_dir = Path(test_dir) / self.source
+        output_dir.mkdir()
+        return output_dir
+
+    @pytest.fixture(scope="class")
+    def source_dir(self, test_dir):
+        """Fixture to create and populate source directory"""
+        source_dir = Path(test_dir) / f"{self.source}_download"
+        copy_tree("tests/fixtures/checks-6", str(source_dir))
+        return source_dir
+
+    def test_check_data_consistency(self, test_dir, output_dir, source_dir):
+        """Test data consistency checks"""
+        bodsdata.output_dir = test_dir
+        bodsdata.check_data_consistency(self.source, check_statement_refs=3)
+
+
+class TestConsistencyIgnoreFail:
+    """Test data consistency checks ignoring wrong specific number of errors"""
+    source = 'test-source9'
+
+    @pytest.fixture(scope="class")
+    def test_dir(self, tmp_path_factory):
+        """Fixture to create temporary directory"""
+        return tmp_path_factory.getbasetemp()
+
+    @pytest.fixture(scope="class")
+    def output_dir(self, test_dir):
+        """Fixture to create temporary directory"""
+        output_dir = Path(test_dir) / self.source
+        output_dir.mkdir()
+        return output_dir
+
+    @pytest.fixture(scope="class")
+    def source_dir(self, test_dir):
+        """Fixture to create and populate source directory"""
+        source_dir = Path(test_dir) / f"{self.source}_download"
+        copy_tree("tests/fixtures/checks-6", str(source_dir))
+        return source_dir
+
+    def test_check_data_consistency(self, test_dir, output_dir, source_dir):
+        """Test data consistency checks"""
+        bodsdata.output_dir = test_dir
+        try:
+            bodsdata.check_data_consistency(self.source, check_statement_refs=2)
+            assert False, "Checks failed to detect issues"
+        except AssertionError as exception:
+            assert "12167039970933723582" in str(exception)

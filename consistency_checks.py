@@ -163,11 +163,11 @@ class ConsistencyChecks:
 
     def skip_errors(self, stats):
         """Skip any known errors"""
-        if stats["missing"] > 0 and not stats["missing"] == self.check_missing_fields:
+        if stats["missing"] > 0 and not stats["missing"] is self.check_missing_fields:
             return False
-        elif stats["duplicate"] > 0 and not stats["duplicate"] == self.check_statement_dups:
+        elif stats["duplicate"] > 0 and not stats["duplicate"] is self.check_statement_dups:
             return False
-        elif stats["duplicate"] > 0 and not stats["duplicate"] == self.check_statement_refs:
+        elif stats["reference"] > 0 and not stats["reference"] is self.check_statement_refs:
             return False
         else:
             return True
@@ -178,17 +178,18 @@ class ConsistencyChecks:
             self.console.print(error, style="red")
         if len(self.error_log) > 0:
             stats = self.error_stats()
-            estats = []
-            for e in stats:
-                if stats[e] > 0: estats.append(f"{stats[e]} {e}")
-            estats = ", ".join(estats)
-            if len(self.error_log) < 5:
-                examples = ", ".join(self.error_log)
-            else:
-                examples = ", ".join(self.error_log[:5])
-            estats += f" ({examples})"
-            message = f"Consistency checks failed: {estats}"
-            raise AssertionError(message)
+            if not self.skip_errors(stats):
+                estats = []
+                for e in stats:
+                    if stats[e] > 0: estats.append(f"{stats[e]} {e}")
+                estats = ", ".join(estats)
+                if len(self.error_log) < 5:
+                    examples = ", ".join(self.error_log)
+                else:
+                    examples = ", ".join(self.error_log[:5])
+                estats += f" ({examples})"
+                message = f"Consistency checks failed: {estats}"
+                raise AssertionError(message)
 
     def run(self):
         """Run consistency checks"""
@@ -196,3 +197,4 @@ class ConsistencyChecks:
         self.generate_stats()
         self.check_stats()
         self.process_errors()
+
