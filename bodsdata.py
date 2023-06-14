@@ -1025,8 +1025,14 @@ def run_pipeline(source, title, description, download, upload, bucket = '', chec
         optional name of s3 bucket containing the source data
     check: bool
         optionally disable data consistency checks
+    check_missing_fields : bool
+        Optionally disable checking for missing required field in statements
     check_is_component : bool
         Optionally disable checking for isComponent in statements
+    check_statement_dups : bool
+        Optionally disable checking for duplicate statementIDs
+    check_statement_refs : bool
+        Optionally disable checking for reference to missing statements
     """
     remove_download(source)
     if bucket != '':
