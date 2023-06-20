@@ -24,3 +24,5 @@ bootstrap-flask
 markdown
 datasette
 humanize
+fastparquet
+rich

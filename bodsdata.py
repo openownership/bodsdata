@@ -45,6 +45,7 @@ from googleapiclient.http import MediaFileUpload
 from jsonref import JsonRef
 from openpyxl.cell.cell import ILLEGAL_CHARACTERS_RE
 
+from consistency_checks import ConsistencyChecks
 
 this_path = Path(__file__).parent.absolute()
 
@@ -717,6 +718,31 @@ def download_files_s3(source, s3_path_pattern, latest=False, bucket="bodsdata-oo
             break
 
 
+def check_data_consistency(source, check_missing_fields=True, check_is_component=True,
+                                          check_statement_dups=True, check_statement_refs=True):
+    """ Run consistency checks on input data.
+
+    Parameters
+    ----------
+    source : string
+        Data Source Name
+    check_missing_fields : bool
+        Optionally disable checking for missing required field in statements
+    check_is_component : bool
+        Optionally disable checking for isComponent in statements
+    check_statement_dups : bool
+        Optionally disable checking for duplicate statementIDs
+    check_statement_refs : bool
+        Optionally disable checking for reference to missing statements
+    """
+
+    source_dir = f'{output_dir}/{source}_download/'
+
+    check = ConsistencyChecks(source_dir, check_missing_fields=check_missing_fields, check_is_component=check_is_component,
+                                          check_statement_dups=check_statement_dups, check_statement_refs=check_statement_refs)
+    check.run()
+
+
 def json_zip(source, upload=False):
     print("Making json.zip")
     with zipfile.ZipFile(f'{output_dir}/{source}/json.zip', 'w', compression=zipfile.ZIP_DEFLATED) as f_zip:
@@ -927,7 +953,7 @@ def publish_metadata(source, title="", description="", upload=True):
         upload_s3(filepath, bucket_location)
 
 
-def make_datasette_infofile(source):
+def make_datasette_infofile(source, upload=True):
     output = subprocess.run(["datasette", "inspect", f'{output_dir}/{source}/sqlite.db'], text=True, capture_output=True)
     inspect_data = json.loads(output.stdout)
     inspect_data["sqlite"]["file"] = f"{source}.db"
@@ -937,7 +963,8 @@ def make_datasette_infofile(source):
     with open(filepath, 'w+') as inspect_file:
         json.dump(inspect_data, inspect_file)
 
-    upload_s3(filepath, f"data/{source}/inspect-data.json")
+    if upload:
+        upload_s3(filepath, f"data/{source}/inspect-data.json")
 
 
 def publish_datasettes():
@@ -978,7 +1005,8 @@ def update_website():
     requests.get(os.environ['RENDER_WEB_DEPLOY_HOOK'])
 
 
-def run_pipeline(source, title, description, download, upload, bucket = ''):
+def run_pipeline(source, title, description, download, upload, bucket = '', check = True, check_missing_fields=True,
+                  check_is_component=True, check_duplicates=True, check_references=True):
     """ Run the entire bodsdata pipeline and (optionally) update website for a single source
     Parameters
     ----------
@@ -995,18 +1023,31 @@ def run_pipeline(source, title, description, download, upload, bucket = ''):
         Upload to s3 bucket and delete local file, and update website
     bucket: string
         optional name of s3 bucket containing the source data
+    check: bool
+        optionally disable data consistency checks
+    check_missing_fields : bool
+        Optionally disable checking for missing required field in statements
+    check_is_component : bool
+        Optionally disable checking for isComponent in statements
+    check_statement_dups : bool
+        Optionally disable checking for duplicate statementIDs
+    check_statement_refs : bool
+        Optionally disable checking for reference to missing statements
     """
     remove_download(source)
     if bucket != '':
         download_files_s3(s3_path_pattern=download, source=source, latest=False, bucket=bucket)
     else:
         download_file(download, source=source)
+    if check: check_data_consistency(source, check_missing_fields=check_missing_fields,
+                                             check_is_component=check_is_component, check_statement_dups=check_statement_dups,
+                                             check_statement_refs=check_statement_refs)
     remove_output(source)
     flatten(source, False)
     json_zip(source, upload)
     sqlite_zip(source, upload)
     sqlite_gzip(source, upload)
-    refresh_bigquery(source)
+    if upload: refresh_bigquery(source)
     create_parquet(source, upload)
     create_samples(source, upload)
     create_parquet_zip(source, upload)
@@ -1020,3 +1061,4 @@ def run_pipeline(source, title, description, download, upload, bucket = ''):
 
 if __name__ == "__main__":
     cli()
+

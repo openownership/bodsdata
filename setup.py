@@ -27,7 +27,8 @@ install_requires = [
     "bootstrap-flask",
     "markdown",
     "datasette",
-    "humanize"
+    "humanize",
+    "rich"
 ]
 
 
@@ -36,7 +37,7 @@ setup(
     version="0.1",
     author="Open Ownership",
     author_email="code@opendataservices.coop",
-    py_modules=['bodsdata'],
+    py_modules=['bodsdata', 'consistency_checks'],
     packages=['bodsdataweb'],
     package_data={'bodsdataweb': ['templates/*', 'static/*']},
     url="https://github.com/openownership/bodsdata",
