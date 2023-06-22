@@ -20,20 +20,20 @@ class TestPipeline:
     source = 'test-pipeline'
 
     @pytest.fixture(scope="class")
-    def test_dir(self, tmp_path_factory):
+    def temp_dir(self, tmp_path_factory):
         """Fixture to create temporary directory"""
         return tmp_path_factory.getbasetemp()
 
     @pytest.fixture(scope="class")
-    def output_dir(self, test_dir):
-        """Fixture to create temporary directory"""
-        output_dir = Path(test_dir) / self.source
+    def output_dir(self, temp_dir):
+        """Fixture to create subdirectory"""
+        output_dir = Path(temp_dir) / self.source
         output_dir.mkdir()
         return output_dir
 
-    def test_pipeline(self, test_dir, output_dir):
+    def test_pipeline(self, temp_dir, output_dir):
         """Test full pipeline without upload"""
-        bodsdata.output_dir = test_dir
+        bodsdata.output_dir = temp_dir
         title = "Test Pipeline"
         description = ""
         download = 'tests/fixtures/checks-1'
