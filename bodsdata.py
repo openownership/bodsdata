@@ -1040,8 +1040,8 @@ def run_pipeline(source, title, description, download, upload, bucket = '', chec
     else:
         download_file(download, source=source)
     if check: check_data_consistency(source, check_missing_fields=check_missing_fields,
-                                             check_is_component=check_is_component, check_statement_dups=check_statement_dups,
-                                             check_statement_refs=check_statement_refs)
+                                             check_is_component=check_is_component, check_statement_dups=check_duplicates,
+                                             check_statement_refs=check_references)
     remove_output(source)
     flatten(source, False)
     json_zip(source, upload)
