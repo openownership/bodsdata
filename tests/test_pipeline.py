@@ -31,13 +31,6 @@ class TestPipeline:
         output_dir.mkdir()
         return output_dir
 
-    #@pytest.fixture(scope="class")
-    #def source_dir(self, test_dir):
-    #    """Fixture to create and populate source directory"""
-    #    source_dir = Path(test_dir) / f"{self.source}_download"
-    #    copy_tree("tests/fixtures/gzip", str(source_dir))
-    #    return source_dir
-
     def test_pipeline(self, test_dir, output_dir):
         """Test full pipeline without upload"""
         bodsdata.output_dir = test_dir
