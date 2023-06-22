@@ -192,9 +192,10 @@ class ConsistencyChecks:
 
     def _process_errors(self):
         """Check for any errors in log"""
-        for error in self.error_log:
+        for error in self.error_log[:1000]:
             #self.console.print(error, style="red")
             print(f"[italic red]{error}[/italic red]")
+        if len(self.error_log) > 1000: print(f"[italic red]List of errors truncated at 1000[/italic red]")
         if len(self.error_log) > 0:
             stats = self._error_stats()
             if not self._skip_errors(stats):
