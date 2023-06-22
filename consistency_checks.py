@@ -2,12 +2,30 @@ import json
 import gzip
 import random
 from pathlib import Path
-from rich.console import Console
+#from rich.console import Console
 
 def map_statement_type(statement_type):
     """Map statement type to shorter version"""
     mapping = {"ownershipOrControlStatement": 'ownership', "personStatement": 'person', "entityStatement": 'entity'}
     return mapping[statement_type]
+
+
+def is_notebook() -> bool:
+    try:
+        shell = get_ipython().__class__.__name__
+        if shell == 'ZMQInteractiveShell':
+            return True   # Jupyter notebook or qtconsole
+        elif shell == 'TerminalInteractiveShell':
+            return False  # Terminal running IPython
+        else:
+            return False  # Other type (?)
+    except NameError:
+        return False      # Probably standard Python interpreter
+
+if is_notebook():
+    from rich.jupyter import print
+else:
+    from rich import print
 
 
 class ConsistencyChecks:
@@ -28,7 +46,7 @@ class ConsistencyChecks:
         self.check_statement_dups = check_statement_dups
         self.check_statement_refs = check_statement_refs
         self.error_log = []
-        self.console = Console()
+        #self.console = Console()
 
     def _statement_stats(self, statement):
         """Create stats data for BODs statement"""
@@ -175,7 +193,8 @@ class ConsistencyChecks:
     def _process_errors(self):
         """Check for any errors in log"""
         for error in self.error_log:
-            self.console.print(error, style="red")
+            #self.console.print(error, style="red")
+            print(f"[italic red]{error}[/italic red]")
         if len(self.error_log) > 0:
             stats = self._error_stats()
             if not self._skip_errors(stats):
