@@ -1006,7 +1006,7 @@ def update_website():
 
 
 def run_pipeline(source, title, description, download, upload, bucket = '', check = True, check_missing_fields=True,
-                  check_is_component=True, check_duplicates=True, check_references=True):
+                  check_is_component=True, check_statement_dups=True, check_statement_refs=True):
     """ Run the entire bodsdata pipeline and (optionally) update website for a single source
     Parameters
     ----------

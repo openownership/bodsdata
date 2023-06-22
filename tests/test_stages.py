@@ -21,18 +21,18 @@ class TestDownloadFile:
     source = 'test-source0'
 
     @pytest.fixture(scope="class")
-    def test_dir(self, tmp_path_factory):
+    def temp_dir(self, tmp_path_factory):
         """Fixture to create temporary directory"""
         return tmp_path_factory.getbasetemp()
 
     @pytest.fixture(scope="class")
-    def output_dir(self, test_dir):
-        """Fixture to create temporary directory"""
-        output_dir = Path(test_dir) / self.source
+    def output_dir(self, temp_dir):
+        """Fixture to create subdirectory"""
+        output_dir = Path(temp_dir) / self.source
         output_dir.mkdir()
         return output_dir
 
-    def test_download_files_s3(self, test_dir, output_dir):
+    def test_download_files_s3(self, temp_dir, output_dir):
         """Test downloading single input file"""
         with patch('bodsdata.get_s3_bucket') as mock_get_s3_bucket:
             download = 'tests/fixtures/gzip/test-bods-data-1.json.gz'
@@ -41,9 +41,9 @@ class TestDownloadFile:
             mock_bucket.download_file.side_effect = copy_file
             mock_get_s3_bucket.return_value = mock_bucket
             bucket = 'oo-register-v2'
-            bodsdata.output_dir = test_dir
+            bodsdata.output_dir = temp_dir
             bodsdata.download_files_s3(s3_path_pattern=download, source=self.source, latest=False, bucket=bucket)
-            assert (test_dir / f"{self.source}_download" / "test-bods-data-1.json.gz").is_file()
+            assert (temp_dir / f"{self.source}_download" / "test-bods-data-1.json.gz").is_file()
 
 
 class TestDownloadDirectory:
@@ -51,18 +51,18 @@ class TestDownloadDirectory:
     source = 'test-source1'
 
     @pytest.fixture(scope="class")
-    def test_dir(self, tmp_path_factory):
+    def temp_dir(self, tmp_path_factory):
         """Fixture to create temporary directory"""
         return tmp_path_factory.getbasetemp()
 
     @pytest.fixture(scope="class")
-    def output_dir(self, test_dir):
-        """Fixture to create temporary directory"""
-        output_dir = Path(test_dir) / self.source
+    def output_dir(self, temp_dir):
+        """Fixture to create subdirectory"""
+        output_dir = Path(temp_dir) / self.source
         output_dir.mkdir()
         return output_dir
 
-    def test_download_files_s3(self, test_dir, output_dir):
+    def test_download_files_s3(self, temp_dir, output_dir):
         """Test downloading directory of input files"""
         with patch('bodsdata.get_s3_bucket') as mock_get_s3_bucket:
             download = 'tests/fixtures/gzip'
@@ -71,11 +71,11 @@ class TestDownloadDirectory:
             mock_bucket.download_file.side_effect = copy_file
             mock_get_s3_bucket.return_value = mock_bucket
             bucket = 'oo-register-v2'
-            bodsdata.output_dir = test_dir
+            bodsdata.output_dir = temp_dir
             bodsdata.download_files_s3(s3_path_pattern=download, source=self.source, latest=False, bucket=bucket)
             for d in Path(download).iterdir():
                 file_name = str(d).split('/')[-1]
-                assert (test_dir / f"{self.source}_download" / file_name).is_file()
+                assert (temp_dir / f"{self.source}_download" / file_name).is_file()
 
 
 class TestPipeline:
@@ -83,27 +83,27 @@ class TestPipeline:
     source = 'test-source2'
 
     @pytest.fixture(scope="class")
-    def test_dir(self, tmp_path_factory):
+    def temp_dir(self, tmp_path_factory):
         """Fixture to create temporary directory"""
         return tmp_path_factory.getbasetemp()
 
     @pytest.fixture(scope="class")
-    def output_dir(self, test_dir):
-        """Fixture to create temporary directory"""
-        output_dir = Path(test_dir) / self.source
+    def output_dir(self, temp_dir):
+        """Fixture to create subdirectory"""
+        output_dir = Path(temp_dir) / self.source
         output_dir.mkdir()
         return output_dir
 
     @pytest.fixture(scope="class")
-    def source_dir(self, test_dir):
+    def source_dir(self, temp_dir):
         """Fixture to create and populate source directory"""
-        source_dir = Path(test_dir) / f"{self.source}_download"
+        source_dir = Path(temp_dir) / f"{self.source}_download"
         copy_tree("tests/fixtures/gzip", str(source_dir))
         return source_dir
 
-    def test_flatten(self, test_dir, output_dir, source_dir):
+    def test_flatten(self, temp_dir, output_dir, source_dir):
         """Test flattening of JSON Lines input files"""
-        bodsdata.output_dir = test_dir
+        bodsdata.output_dir = temp_dir
         bodsdata.flatten(self.source, False)
         print(list(output_dir.iterdir()))
         csv_dir = output_dir / "csv"
@@ -130,9 +130,9 @@ class TestPipeline:
             ooc_statement_resource = [resource for resource in json_data['resources'] if resource['name'] == 'ooc_statement'][0]
             assert [field for field in ooc_statement_resource['schema']['fields'] if field['name'] == 'statementID'][0]['count'] == 16
 
-    def test_json_zip(self, test_dir, output_dir, source_dir):
+    def test_json_zip(self, temp_dir, output_dir, source_dir):
         """Test creation of output json.zip file containing merged JSON Lines from input files"""
-        bodsdata.output_dir = test_dir
+        bodsdata.output_dir = temp_dir
         bodsdata.json_zip(self.source)
         with zipfile.ZipFile(output_dir / 'json.zip') as test_zip:
             with test_zip.open(f'{self.source}.json') as output_file:
@@ -141,33 +141,33 @@ class TestPipeline:
                 assert len(data) == 20
                 assert json.loads(data[0].strip())['interestedParty']['describedByPersonStatement'] == '14105856581894595060'
 
-    def test_sqlite_zip(self, test_dir, output_dir, source_dir):
+    def test_sqlite_zip(self, temp_dir, output_dir, source_dir):
         """Test creation of output sqlite.db.gz file"""
-        bodsdata.output_dir = test_dir
+        bodsdata.output_dir = temp_dir
         bodsdata.sqlite_zip(self.source)
         with zipfile.ZipFile(output_dir / 'sqlite.zip') as test_zip:
             files = test_zip.namelist()
             print(files)
             assert 'sqlite.db' in files
 
-    def test_sqlite_gzip(self, test_dir, output_dir, source_dir):
+    def test_sqlite_gzip(self, temp_dir, output_dir, source_dir):
         """Test creation of output sqlite.db.gz file"""
-        bodsdata.output_dir = test_dir
+        bodsdata.output_dir = temp_dir
         bodsdata.sqlite_gzip(self.source)
         assert (output_dir / 'sqlite.db.gz').is_file()
 
-    def test_create_samples(self, test_dir, output_dir, source_dir):
+    def test_create_samples(self, temp_dir, output_dir, source_dir):
         """Test creation of output samples.json file"""
-        bodsdata.output_dir = test_dir
+        bodsdata.output_dir = temp_dir
         bodsdata.create_samples(self.source)
         with open(output_dir / 'samples.json') as output_file:
             json_data = json.load(output_file)
             assert len(json_data['person_statement']['data']) == 4
             assert len(json_data['ooc_statement']['data']) == 10
 
-    def test_create_parquet_zip(self, test_dir, output_dir, source_dir):
+    def test_create_parquet_zip(self, temp_dir, output_dir, source_dir):
         """Test creation of output parquet.zip file"""
-        bodsdata.output_dir = test_dir
+        bodsdata.output_dir = temp_dir
         bodsdata.create_parquet_zip(self.source)
         with zipfile.ZipFile(output_dir / "parquet.zip") as parquet_zip:
             files = parquet_zip.namelist()
@@ -179,18 +179,18 @@ class TestPipeline:
             assert 'ooc_statement.parquet' in files
             assert 'ooc_interests.parquet' in files
 
-    def test_create_pgdump(self, test_dir, output_dir, source_dir):
+    def test_create_pgdump(self, temp_dir, output_dir, source_dir):
         """Test creation of output parquet.zip file"""
-        bodsdata.output_dir = test_dir
+        bodsdata.output_dir = temp_dir
         bodsdata.create_pgdump(self.source)
         assert (output_dir / 'pgdump.sql.gz').is_file()
         with gzip.open(output_dir / 'pgdump.sql.gz','rb') as pgdump:
             data = pgdump.readlines()
             assert len([d for d in data if d.startswith(b'COPY')]) == 7
 
-    def test_datapackage(self, test_dir, output_dir, source_dir):
+    def test_datapackage(self, temp_dir, output_dir, source_dir):
         """Test creation of output datapackage file"""
-        bodsdata.output_dir = test_dir
+        bodsdata.output_dir = temp_dir
         bodsdata.datapackage(self.source)
         with zipfile.ZipFile(output_dir / "csv.zip") as datapackage_zip:
             files = datapackage_zip.namelist()
@@ -203,9 +203,9 @@ class TestPipeline:
             assert 'csv/person_statement.csv' in files
             assert 'datapackage.json' in files
 
-    def test_make_datasette_infofile(self, test_dir, output_dir, source_dir):
+    def test_make_datasette_infofile(self, temp_dir, output_dir, source_dir):
         """Test creation of output inspect-data.json file"""
-        bodsdata.output_dir = test_dir
+        bodsdata.output_dir = temp_dir
         bodsdata.make_datasette_infofile(self.source, False)
         with open(output_dir / 'inspect-data.json') as output_file:
             json_data = json.load(output_file)
@@ -222,27 +222,27 @@ class TestConsistencyPass:
     source = 'test-source3'
 
     @pytest.fixture(scope="class")
-    def test_dir(self, tmp_path_factory):
+    def temp_dir(self, tmp_path_factory):
         """Fixture to create temporary directory"""
         return tmp_path_factory.getbasetemp()
 
     @pytest.fixture(scope="class")
-    def output_dir(self, test_dir):
-        """Fixture to create temporary directory"""
-        output_dir = Path(test_dir) / self.source
+    def output_dir(self, temp_dir):
+        """Fixture to create subdirectory"""
+        output_dir = Path(temp_dir) / self.source
         output_dir.mkdir()
         return output_dir
 
     @pytest.fixture(scope="class")
-    def source_dir(self, test_dir):
+    def source_dir(self, temp_dir):
         """Fixture to create and populate source directory"""
-        source_dir = Path(test_dir) / f"{self.source}_download"
+        source_dir = Path(temp_dir) / f"{self.source}_download"
         copy_tree("tests/fixtures/checks-1", str(source_dir))
         return source_dir
 
-    def test_check_data_consistency(self, test_dir, output_dir, source_dir):
+    def test_check_data_consistency(self, temp_dir, output_dir, source_dir):
         """Test data consistency checks"""
-        bodsdata.output_dir = test_dir
+        bodsdata.output_dir = temp_dir
         bodsdata.check_data_consistency(self.source)
 
 
@@ -251,27 +251,27 @@ class TestConsistencyFail:
     source = 'test-source4'
 
     @pytest.fixture(scope="class")
-    def test_dir(self, tmp_path_factory):
+    def temp_dir(self, tmp_path_factory):
         """Fixture to create temporary directory"""
         return tmp_path_factory.getbasetemp()
 
     @pytest.fixture(scope="class")
-    def output_dir(self, test_dir):
-        """Fixture to create temporary directory"""
-        output_dir = Path(test_dir) / self.source
+    def output_dir(self, temp_dir):
+        """Fixture to create subdirectory"""
+        output_dir = Path(temp_dir) / self.source
         output_dir.mkdir()
         return output_dir
 
     @pytest.fixture(scope="class")
-    def source_dir(self, test_dir):
+    def source_dir(self, temp_dir):
         """Fixture to create and populate source directory"""
-        source_dir = Path(test_dir) / f"{self.source}_download"
+        source_dir = Path(temp_dir) / f"{self.source}_download"
         copy_tree("tests/fixtures/checks-2", str(source_dir))
         return source_dir
 
-    def test_check_data_consistency(self, test_dir, output_dir, source_dir):
+    def test_check_data_consistency(self, temp_dir, output_dir, source_dir):
         """Test data consistency checks"""
-        bodsdata.output_dir = test_dir
+        bodsdata.output_dir = temp_dir
         try:
             bodsdata.check_data_consistency(self.source)
             assert False, "Checks failed to detect issues"
@@ -284,27 +284,27 @@ class TestConsistencyDuplicates:
     source = 'test-source5'
 
     @pytest.fixture(scope="class")
-    def test_dir(self, tmp_path_factory):
+    def temp_dir(self, tmp_path_factory):
         """Fixture to create temporary directory"""
         return tmp_path_factory.getbasetemp()
 
     @pytest.fixture(scope="class")
-    def output_dir(self, test_dir):
-        """Fixture to create temporary directory"""
-        output_dir = Path(test_dir) / self.source
+    def output_dir(self, temp_dir):
+        """Fixture to create subdirectory"""
+        output_dir = Path(temp_dir) / self.source
         output_dir.mkdir()
         return output_dir
 
     @pytest.fixture(scope="class")
-    def source_dir(self, test_dir):
+    def source_dir(self, temp_dir):
         """Fixture to create and populate source directory"""
-        source_dir = Path(test_dir) / f"{self.source}_download"
+        source_dir = Path(temp_dir) / f"{self.source}_download"
         copy_tree("tests/fixtures/checks-3", str(source_dir))
         return source_dir
 
-    def test_check_data_consistency(self, test_dir, output_dir, source_dir):
+    def test_check_data_consistency(self, temp_dir, output_dir, source_dir):
         """Test data consistency checks"""
-        bodsdata.output_dir = test_dir
+        bodsdata.output_dir = temp_dir
         try:
             bodsdata.check_data_consistency(self.source)
             assert False, "Checks failed to detect issues"
@@ -317,27 +317,27 @@ class TestConsistencyReference:
     source = 'test-source6'
 
     @pytest.fixture(scope="class")
-    def test_dir(self, tmp_path_factory):
+    def temp_dir(self, tmp_path_factory):
         """Fixture to create temporary directory"""
         return tmp_path_factory.getbasetemp()
 
     @pytest.fixture(scope="class")
-    def output_dir(self, test_dir):
-        """Fixture to create temporary directory"""
-        output_dir = Path(test_dir) / self.source
+    def output_dir(self, temp_dir):
+        """Fixture to create subdirectory"""
+        output_dir = Path(temp_dir) / self.source
         output_dir.mkdir()
         return output_dir
 
     @pytest.fixture(scope="class")
-    def source_dir(self, test_dir):
+    def source_dir(self, temp_dir):
         """Fixture to create and populate source directory"""
-        source_dir = Path(test_dir) / f"{self.source}_download"
+        source_dir = Path(temp_dir) / f"{self.source}_download"
         copy_tree("tests/fixtures/checks-4", str(source_dir))
         return source_dir
 
-    def test_check_data_consistency(self, test_dir, output_dir, source_dir):
+    def test_check_data_consistency(self, temp_dir, output_dir, source_dir):
         """Test data consistency checks"""
-        bodsdata.output_dir = test_dir
+        bodsdata.output_dir = temp_dir
         try:
             bodsdata.check_data_consistency(self.source)
             assert False, "Checks failed to detect issues"
@@ -350,27 +350,27 @@ class TestConsistencyFields:
     source = 'test-source7'
 
     @pytest.fixture(scope="class")
-    def test_dir(self, tmp_path_factory):
+    def temp_dir(self, tmp_path_factory):
         """Fixture to create temporary directory"""
         return tmp_path_factory.getbasetemp()
 
     @pytest.fixture(scope="class")
-    def output_dir(self, test_dir):
-        """Fixture to create temporary directory"""
-        output_dir = Path(test_dir) / self.source
+    def output_dir(self, temp_dir):
+        """Fixture to create subdirectory"""
+        output_dir = Path(temp_dir) / self.source
         output_dir.mkdir()
         return output_dir
 
     @pytest.fixture(scope="class")
-    def source_dir(self, test_dir):
+    def source_dir(self, temp_dir):
         """Fixture to create and populate source directory"""
-        source_dir = Path(test_dir) / f"{self.source}_download"
+        source_dir = Path(temp_dir) / f"{self.source}_download"
         copy_tree("tests/fixtures/checks-5", str(source_dir))
         return source_dir
 
-    def test_check_data_consistency(self, test_dir, output_dir, source_dir):
+    def test_check_data_consistency(self, temp_dir, output_dir, source_dir):
         """Test data consistency checks"""
-        bodsdata.output_dir = test_dir
+        bodsdata.output_dir = temp_dir
         try:
             bodsdata.check_data_consistency(self.source)
             assert False, "Checks failed to detect issues"
@@ -383,27 +383,27 @@ class TestConsistencyIgnore:
     source = 'test-source8'
 
     @pytest.fixture(scope="class")
-    def test_dir(self, tmp_path_factory):
+    def temp_dir(self, tmp_path_factory):
         """Fixture to create temporary directory"""
         return tmp_path_factory.getbasetemp()
 
     @pytest.fixture(scope="class")
-    def output_dir(self, test_dir):
-        """Fixture to create temporary directory"""
-        output_dir = Path(test_dir) / self.source
+    def output_dir(self, temp_dir):
+        """Fixture to create subdirectory"""
+        output_dir = Path(temp_dir) / self.source
         output_dir.mkdir()
         return output_dir
 
     @pytest.fixture(scope="class")
-    def source_dir(self, test_dir):
+    def source_dir(self, temp_dir):
         """Fixture to create and populate source directory"""
-        source_dir = Path(test_dir) / f"{self.source}_download"
+        source_dir = Path(temp_dir) / f"{self.source}_download"
         copy_tree("tests/fixtures/checks-6", str(source_dir))
         return source_dir
 
-    def test_check_data_consistency(self, test_dir, output_dir, source_dir):
+    def test_check_data_consistency(self, temp_dir, output_dir, source_dir):
         """Test data consistency checks"""
-        bodsdata.output_dir = test_dir
+        bodsdata.output_dir = temp_dir
         bodsdata.check_data_consistency(self.source, check_statement_refs=3)
 
 
@@ -412,27 +412,27 @@ class TestConsistencyIgnoreFail:
     source = 'test-source9'
 
     @pytest.fixture(scope="class")
-    def test_dir(self, tmp_path_factory):
+    def temp_dir(self, tmp_path_factory):
         """Fixture to create temporary directory"""
         return tmp_path_factory.getbasetemp()
 
     @pytest.fixture(scope="class")
-    def output_dir(self, test_dir):
-        """Fixture to create temporary directory"""
-        output_dir = Path(test_dir) / self.source
+    def output_dir(self, temp_dir):
+        """Fixture to create subdirectory"""
+        output_dir = Path(temp_dir) / self.source
         output_dir.mkdir()
         return output_dir
 
     @pytest.fixture(scope="class")
-    def source_dir(self, test_dir):
+    def source_dir(self, temp_dir):
         """Fixture to create and populate source directory"""
-        source_dir = Path(test_dir) / f"{self.source}_download"
+        source_dir = Path(temp_dir) / f"{self.source}_download"
         copy_tree("tests/fixtures/checks-6", str(source_dir))
         return source_dir
 
-    def test_check_data_consistency(self, test_dir, output_dir, source_dir):
+    def test_check_data_consistency(self, temp_dir, output_dir, source_dir):
         """Test data consistency checks"""
-        bodsdata.output_dir = test_dir
+        bodsdata.output_dir = temp_dir
         try:
             bodsdata.check_data_consistency(self.source, check_statement_refs=2)
             assert False, "Checks failed to detect issues"
