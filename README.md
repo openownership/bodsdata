@@ -78,6 +78,8 @@ By default this checks:
 
 These checks can be individually disabled with optional keyword arguments (e.g. check_missing_fields=False, check_statement_dups=False, check_statement_refs=False). Setting one of these arguments to an integer value will also allow the checks to pass if exactly that number of that type of errors are found (e.g. check_statement_refs=62 will pass if exactly 62 referencing errors are found).
 
+An error_limit parameter (default=1000) controls the maximum number of consistency check errors which will be printed.
+
 When running the pipeline, the argument checks=False will disable the consistency checks stage.
 
 ## Development

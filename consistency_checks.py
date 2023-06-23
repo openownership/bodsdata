@@ -2,7 +2,7 @@ import json
 import gzip
 import random
 from pathlib import Path
-from rich.console import Console
+
 
 def map_statement_type(statement_type):
     """Map statement type to shorter version"""
@@ -10,10 +10,37 @@ def map_statement_type(statement_type):
     return mapping[statement_type]
 
 
+def is_notebook() -> bool:
+    try:
+        shell = get_ipython().__class__.__name__
+        if shell == 'ZMQInteractiveShell':
+            return True   # Jupyter notebook or qtconsole
+        elif shell == 'TerminalInteractiveShell':
+            return False  # Terminal running IPython
+        else:
+            return False  # Other type (?)
+    except NameError:
+        return False      # Probably standard Python interpreter
+
+def get_console():
+    if is_notebook():
+        #from rich.jupyter import print (hopefully reinstate when work out what Deepnote's problem is)
+        return print
+    else:
+        from rich import print as console
+        return console
+
+def output_text(console, text, colour):
+    if console.__module__ == 'rich':
+        console(f"[italic {colour}]{text}[/italic {colour}]")
+    else:
+        console(text)
+
 class ConsistencyChecks:
     """Perform consistancy check on BODS data"""
     def __init__(self, source_dir, dates=False, hours=False, gzip=True, check_is_component=True,
-                         check_missing_fields=True, check_statement_dups=True, check_statement_refs=True):
+                         check_missing_fields=True, check_statement_dups=True, check_statement_refs=True,
+                         error_limit=1000):
         """Initialise checks"""
         print("Initialising consistency checks on data")
         self.statements = {}
@@ -28,7 +55,8 @@ class ConsistencyChecks:
         self.check_statement_dups = check_statement_dups
         self.check_statement_refs = check_statement_refs
         self.error_log = []
-        self.console = Console()
+        self.error_limit = error_limit
+        self.console = get_console()
 
     def _statement_stats(self, statement):
         """Create stats data for BODs statement"""
@@ -174,8 +202,10 @@ class ConsistencyChecks:
 
     def _process_errors(self):
         """Check for any errors in log"""
-        for error in self.error_log:
-            self.console.print(error, style="red")
+        for error in self.error_log[:self.error_limit]:
+            output_text(self.console, error, "red")
+        if len(self.error_log) > self.error_limit:
+            output_text(self.console, f"{len(self.error_log)} errors: truncated at {self.error_limit}", "red")
         if len(self.error_log) > 0:
             stats = self._error_stats()
             if not self._skip_errors(stats):
@@ -197,4 +227,4 @@ class ConsistencyChecks:
         self._generate_stats()
         self._check_stats()
         self._process_errors()
-
+        self.error_log = None
