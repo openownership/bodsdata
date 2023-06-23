@@ -193,7 +193,8 @@ class ConsistencyChecks:
         """Skip any known errors"""
         print(stats["missing"] > 0, stats["missing"] is self.check_missing_fields)
         print(stats["duplicate"] > 0, stats["duplicate"] is self.check_statement_dups)
-        print(stats["reference"] > 0, stats["reference"] is self.check_statement_refs)
+        print(stats["reference"] > 0, stats["reference"] is self.check_statement_refs, 
+              stats["reference"], type(stats["reference"]), self.check_statement_refs, type(self.check_statement_refs))
         if stats["missing"] > 0 and not stats["missing"] is self.check_missing_fields:
             return False
         elif stats["duplicate"] > 0 and not stats["duplicate"] is self.check_statement_dups:
