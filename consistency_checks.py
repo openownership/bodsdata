@@ -200,6 +200,7 @@ class ConsistencyChecks:
         elif stats["duplicate"] > 0 and not stats["duplicate"] is self.check_statement_dups:
             return False
         elif stats["reference"] > 0 and not stats["reference"] is self.check_statement_refs:
+        elif stats["reference"] > 0 and (isinstance(self.check_statement_refs, bool) or stats["reference"] != self.check_statement_refs):
             return False
         else:
             return True
