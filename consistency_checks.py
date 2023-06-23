@@ -227,4 +227,4 @@ class ConsistencyChecks:
         self._generate_stats()
         self._check_stats()
         self._process_errors()
-
+        self.error_log = None
