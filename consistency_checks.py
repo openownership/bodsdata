@@ -191,6 +191,9 @@ class ConsistencyChecks:
 
     def _skip_errors(self, stats):
         """Skip any known errors"""
+        print(stats["missing"] > 0, stats["missing"] is self.check_missing_fields)
+        print(stats["duplicate"] > 0, stats["duplicate"] is self.check_statement_dups)
+        print(stats["reference"] > 0, stats["reference"] is self.check_statement_refs)
         if stats["missing"] > 0 and not stats["missing"] is self.check_missing_fields:
             return False
         elif stats["duplicate"] > 0 and not stats["duplicate"] is self.check_statement_dups:
@@ -208,6 +211,7 @@ class ConsistencyChecks:
             output_text(self.console, f"{len(self.error_log)} errors: truncated at {self.error_limit}", "red")
         if len(self.error_log) > 0:
             stats = self._error_stats()
+            print(stats)
             if not self._skip_errors(stats):
                 estats = []
                 for e in stats:
