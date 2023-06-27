@@ -91,7 +91,7 @@ class ConsistencyChecks:
         if statement['statementType'] == "personStatement":
             self._perform_check('personType' in statement, f"Missing BODS field: No personType in person statement: {statement}")
             if statement['personType'] in ('anonymousPerson', 'unknownPerson'):
-                self.perform_check('reason' in statement['unspecifiedPersonDetails'], \
+                self._perform_check('reason' in statement['unspecifiedPersonDetails'], \
                         f"Missing BODS field: No reason for person statement with {statement['personType']} personType: {statement}")
         elif statement['statementType'] == "entityStatement":
             self._perform_check('entityType' in statement, f"Missing BODS field: No entityType in entity statement: {statement}")
