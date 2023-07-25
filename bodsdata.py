@@ -719,7 +719,8 @@ def download_files_s3(source, s3_path_pattern, latest=False, bucket="bodsdata-oo
 
 
 def check_data_consistency(source, check_missing_fields=True, check_is_component=True,
-                           check_statement_dups=True, check_statement_refs=True, error_limit=1000):
+                           check_statement_dups=True, check_statement_refs=True, error_limit=1000,
+                           check_version=None):
     """ Run consistency checks on input data.
 
     Parameters
@@ -736,13 +737,15 @@ def check_data_consistency(source, check_missing_fields=True, check_is_component
         Optionally disable checking for reference to missing statements
     error_limit: int
         Maximum number of consistency check errors to print out (default=1000)
+    check_version: str
+        BODS version to validate against (default detect version)
     """
 
     source_dir = f'{output_dir}/{source}_download/'
 
     check = ConsistencyChecks(source_dir, check_missing_fields=check_missing_fields, check_is_component=check_is_component,
                                           check_statement_dups=check_statement_dups, check_statement_refs=check_statement_refs,
-                                          error_limit=error_limit)
+                                          error_limit=error_limit, check_version=check_version)
     check.run()
 
 
@@ -1009,7 +1012,8 @@ def update_website():
 
 
 def run_pipeline(source, title, description, download, upload, bucket = '', check = True, check_missing_fields=True,
-                  check_is_component=True, check_statement_dups=True, check_statement_refs=True, error_limit=1000):
+                  check_is_component=True, check_statement_dups=True, check_statement_refs=True, error_limit=1000,
+                  check_version=None):
     """ Run the entire bodsdata pipeline and (optionally) update website for a single source
     Parameters
     ----------
@@ -1038,6 +1042,8 @@ def run_pipeline(source, title, description, download, upload, bucket = '', chec
         Optionally disable checking for reference to missing statements
     error_limit: int
         Maximum number of consistency check errors to print out (default=1000)
+    check_version: str
+        BODS version to validate against (default detect version)
     """
     remove_download(source)
     if bucket != '':
@@ -1046,7 +1052,7 @@ def run_pipeline(source, title, description, download, upload, bucket = '', chec
         download_file(download, source=source)
     if check: check_data_consistency(source, check_missing_fields=check_missing_fields,
                                              check_is_component=check_is_component, check_statement_dups=check_statement_dups,
-                                             check_statement_refs=check_statement_refs, error_limit=error_limit)
+                                             check_statement_refs=check_statement_refs, error_limit=error_limit, check_version=check_version)
     remove_output(source)
     flatten(source, False)
     json_zip(source, upload)

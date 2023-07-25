@@ -438,3 +438,127 @@ class TestConsistencyIgnoreFail:
             assert False, "Checks failed to detect issues"
         except AssertionError as exception:
             assert "12167039970933723582" in str(exception)
+
+
+class TestConsistencyVersionPass:
+    """Test data consistency checks with duplicates"""
+    source = 'test-source10'
+
+    @pytest.fixture(scope="class")
+    def temp_dir(self, tmp_path_factory):
+        """Fixture to create temporary directory"""
+        return tmp_path_factory.getbasetemp()
+
+    @pytest.fixture(scope="class")
+    def output_dir(self, temp_dir):
+        """Fixture to create subdirectory"""
+        output_dir = Path(temp_dir) / self.source
+        output_dir.mkdir()
+        return output_dir
+
+    @pytest.fixture(scope="class")
+    def source_dir(self, temp_dir):
+        """Fixture to create and populate source directory"""
+        source_dir = Path(temp_dir) / f"{self.source}_download"
+        copy_tree("tests/fixtures/checks-7", str(source_dir))
+        return source_dir
+
+    def test_check_data_consistency(self, temp_dir, output_dir, source_dir):
+        """Test data consistency checks"""
+        bodsdata.output_dir = temp_dir
+        bodsdata.check_data_consistency(self.source)
+
+
+class TestConsistencyVersionFail:
+    """Test data consistency checks with duplicates"""
+    source = 'test-source11'
+
+    @pytest.fixture(scope="class")
+    def temp_dir(self, tmp_path_factory):
+        """Fixture to create temporary directory"""
+        return tmp_path_factory.getbasetemp()
+
+    @pytest.fixture(scope="class")
+    def output_dir(self, temp_dir):
+        """Fixture to create subdirectory"""
+        output_dir = Path(temp_dir) / self.source
+        output_dir.mkdir()
+        return output_dir
+
+    @pytest.fixture(scope="class")
+    def source_dir(self, temp_dir):
+        """Fixture to create and populate source directory"""
+        source_dir = Path(temp_dir) / f"{self.source}_download"
+        copy_tree("tests/fixtures/checks-7", str(source_dir))
+        return source_dir
+
+    def test_check_data_consistency(self, temp_dir, output_dir, source_dir):
+        """Test data consistency checks"""
+        bodsdata.output_dir = temp_dir
+        try:
+            bodsdata.check_data_consistency(self.source, check_version="0.2")
+            assert False, "Checks failed to detect issues"
+        except AssertionError as exception:
+            assert "Consistency checks failed: 26 missing" in str(exception)
+
+
+class TestConsistencyIsComponentFail:
+    """Test data consistency checks with duplicates"""
+    source = 'test-source12'
+
+    @pytest.fixture(scope="class")
+    def temp_dir(self, tmp_path_factory):
+        """Fixture to create temporary directory"""
+        return tmp_path_factory.getbasetemp()
+
+    @pytest.fixture(scope="class")
+    def output_dir(self, temp_dir):
+        """Fixture to create subdirectory"""
+        output_dir = Path(temp_dir) / self.source
+        output_dir.mkdir()
+        return output_dir
+
+    @pytest.fixture(scope="class")
+    def source_dir(self, temp_dir):
+        """Fixture to create and populate source directory"""
+        source_dir = Path(temp_dir) / f"{self.source}_download"
+        copy_tree("tests/fixtures/checks-8", str(source_dir))
+        return source_dir
+
+    def test_check_data_consistency(self, temp_dir, output_dir, source_dir):
+        """Test data consistency checks"""
+        bodsdata.output_dir = temp_dir
+        try:
+            bodsdata.check_data_consistency(self.source)
+            assert False, "Checks failed to detect issues"
+        except AssertionError as exception:
+            assert "Consistency checks failed: 10 missing" in str(exception)
+
+
+class TestConsistencyIsComponentPass:
+    """Test data consistency checks with duplicates"""
+    source = 'test-source13'
+
+    @pytest.fixture(scope="class")
+    def temp_dir(self, tmp_path_factory):
+        """Fixture to create temporary directory"""
+        return tmp_path_factory.getbasetemp()
+
+    @pytest.fixture(scope="class")
+    def output_dir(self, temp_dir):
+        """Fixture to create subdirectory"""
+        output_dir = Path(temp_dir) / self.source
+        output_dir.mkdir()
+        return output_dir
+
+    @pytest.fixture(scope="class")
+    def source_dir(self, temp_dir):
+        """Fixture to create and populate source directory"""
+        source_dir = Path(temp_dir) / f"{self.source}_download"
+        copy_tree("tests/fixtures/checks-8", str(source_dir))
+        return source_dir
+
+    def test_check_data_consistency(self, temp_dir, output_dir, source_dir):
+        """Test data consistency checks"""
+        bodsdata.output_dir = temp_dir
+        bodsdata.check_data_consistency(self.source, check_is_component=False)

@@ -3,6 +3,14 @@ import gzip
 import random
 from pathlib import Path
 
+from bods_required_versions import required_fields
+
+def bods_version(statement):
+    if 'publicationDetails' in statement and 'bodsVersion' in statement['publicationDetails']:
+        return statement['publicationDetails']['bodsVersion']
+    else:
+        return '0.1'
+
 
 def map_statement_type(statement_type):
     """Map statement type to shorter version"""
@@ -22,6 +30,7 @@ def is_notebook() -> bool:
     except NameError:
         return False      # Probably standard Python interpreter
 
+
 def get_console():
     if is_notebook():
         #from rich.jupyter import print (hopefully reinstate when work out what Deepnote's problem is)
@@ -30,17 +39,19 @@ def get_console():
         from rich import print as console
         return console
 
+
 def output_text(console, text, colour):
     if console.__module__ == 'rich':
         console(f"[italic {colour}]{text}[/italic {colour}]")
     else:
         console(text)
 
+
 class ConsistencyChecks:
     """Perform consistancy check on BODS data"""
     def __init__(self, source_dir, dates=False, hours=False, gzip=True, check_is_component=True,
                          check_missing_fields=True, check_statement_dups=True, check_statement_refs=True,
-                         error_limit=1000):
+                         error_limit=1000, check_version=None):
         """Initialise checks"""
         print("Initialising consistency checks on data")
         self.statements = {}
@@ -56,6 +67,7 @@ class ConsistencyChecks:
         self.check_statement_refs = check_statement_refs
         self.error_log = []
         self.error_limit = error_limit
+        self.check_version = check_version
         self.console = get_console()
 
     def _statement_stats(self, statement):
@@ -79,32 +91,38 @@ class ConsistencyChecks:
             else:
                 self.error_log.append(message)
 
+    def _check_element(self, statement, element, required):
+        """Check statement element for require fields"""
+        for name in required:
+            if name != "isComponent" or self.check_is_component:
+                if name.endswith('=='):
+                    field = name.split('=')[0]
+                    if element[field] in required[name]:
+                        self._check_element(statement, element, required[name][element[field]])
+                else:
+                    if required[name][0]:
+                        self._perform_check(name in element, f"Missing BODS field: No {name} in statement: {statement}")
+                        if name in element:
+                            if isinstance(required[name][1], dict):
+                                self._check_element(statement, element[name], required[name][1])
+                            else:
+                                self._perform_check(isinstance(element[name], required[name][1]), 
+                                    f"Invalid BODS field type: Field {name} has invalid type {type(element[name])} in statement: {statement}")
+                    else:
+                        if isinstance(required[name][1], dict) and name in element:
+                            self._check_element(statement, element[name], required[name][1])
+
+    def _check_required(self, statement, required):
+        """Check statement for required fields"""
+        self._check_element(statement, statement, required)
+
     def _check_statement(self, statement):
         """Check BODS statement fields"""
-        self._perform_check('statementID' in statement, f"Missing BODS field: No statementID in statement: {statement}")
-        self._perform_check('statementType' in statement, f"Missing BODS field: No statementType in statement: {statement}")
-        self._perform_check('publicationDetails' in statement, f"Missing BODS field: No publicationDetails in statement: {statement}")
-        self._perform_check('publicationDate' in statement['publicationDetails'], f"Missing BODS field: No publicationDetails/publicationDate in statement: {statement}")
-        self._perform_check('bodsVersion' in statement['publicationDetails'], f"Missing BODS field: No publicationDetails/bodsVersion in statement: {statement}")
-        if self.check_is_component:
-            self._perform_check('isComponent' in statement, f"Missing BODS field: No isComponent in statement: {statement}")
-        if statement['statementType'] == "personStatement":
-            self._perform_check('personType' in statement, f"Missing BODS field: No personType in person statement: {statement}")
-            if statement['personType'] in ('anonymousPerson', 'unknownPerson'):
-                self._perform_check('reason' in statement['unspecifiedPersonDetails'], \
-                        f"Missing BODS field: No reason for person statement with {statement['personType']} personType: {statement}")
-        elif statement['statementType'] == "entityStatement":
-            self._perform_check('entityType' in statement, f"Missing BODS field: No entityType in entity statement: {statement}")
-            if statement['entityType'] in ('anonymousEntity' or 'unknownEntity'):
-                self._perform_check('reason' in statement['unspecifiedEntityDetails'], \
-                        f"Missing BODS field: No reason for entity statement with {statement['entityType']} entityType: {statement}")
-        elif statement['statementType'] == "ownershipOrControlStatement":
-            self._perform_check('subject' in statement, f"Missing BODS field: No subject in ownershipOrControlStatement: {statement}")
-            self._perform_check('describedByEntityStatement' in statement['subject'], \
-                    f"Missing BODS field: No subject/describedByEntityStatement in ownershipOrControlStatement: {statement}")
-            self._perform_check('interestedParty' in statement, f"Missing BODS field: No interestedParty in ownershipOrControlStatement: {statement}")
+        if self.check_version:
+            version = self.check_version
         else:
-            self._perform_check(False, f"BODS field value: Incorrect statementType for statement: {statement}")
+            version = bods_version(statement)
+        self._check_required(statement, required_fields[version])
 
     def _read_json_file(self, f):
         """Read from JSON Lines file and yield items"""
