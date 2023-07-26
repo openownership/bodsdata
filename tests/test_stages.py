@@ -137,9 +137,13 @@ class TestPipeline:
         with zipfile.ZipFile(output_dir / 'json.zip') as test_zip:
             with test_zip.open(f'{self.source}.json') as output_file:
                 data = output_file.readlines()
-                print(data)
-                assert len(data) == 20
-                assert json.loads(data[0].strip())['interestedParty']['describedByPersonStatement'] == '14105856581894595060'
+                statements = [json.loads(d.strip()) for d in data]
+                assert len(statements) == 20
+                assert len([s for s in statements if s["statementType"] == "ownershipOrControlStatement"]) == 16
+                assert '14105856581894595060' in [s['interestedParty']['describedByPersonStatement'] for s in statements if
+                                                                        s["statementType"] == "ownershipOrControlStatement"]
+                assert len([s for s in statements if s["statementType"] == "personStatement"]) == 4
+                assert '11262152698769124205' in [s["statementID"] for s in statements if s["statementType"] == "personStatement"]
 
     def test_sqlite_zip(self, temp_dir, output_dir, source_dir):
         """Test creation of output sqlite.db.gz file"""
