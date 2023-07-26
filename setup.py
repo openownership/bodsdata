@@ -37,7 +37,7 @@ setup(
     version="0.1",
     author="Open Ownership",
     author_email="code@opendataservices.coop",
-    py_modules=['bodsdata', 'consistency_checks'],
+    py_modules=['bodsdata', 'consistency_checks', 'bods_required_versions'],
     packages=['bodsdataweb'],
     package_data={'bodsdataweb': ['templates/*', 'static/*']},
     url="https://github.com/openownership/bodsdata",
