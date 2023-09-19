@@ -694,6 +694,8 @@ def download_files_s3(source, s3_path_pattern, latest=False, bucket="bodsdata-oo
     bucket = get_s3_bucket(bucket)
     items = []
 
+    if not s3_path_pattern.startswith("^"): s3_path_pattern = f"^{s3_path_pattern}"
+
     for item in bucket.objects.all():
         if re.search(s3_path_pattern, item.key):
             items.append(item.key)
