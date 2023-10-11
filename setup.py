@@ -23,6 +23,7 @@ install_requires = [
     "jsonref",
     "ipython",
     "flatterer",
+    "Werkzeug<3",
     "frozen-flask",
     "bootstrap-flask",
     "markdown",

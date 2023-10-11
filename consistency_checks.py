@@ -1,3 +1,4 @@
+import datetime
 import json
 import gzip
 import random
@@ -203,6 +204,28 @@ class ConsistencyChecks:
         else:
             return True
 
+    def _output_errors(self, stats):
+        """Output errors to json file"""
+        out = stats.copy()
+        referencing = []
+        duplicates = []
+        missing = []
+        for error in self.error_log:
+            if error.startswith("BODS referencing error"):
+                statement_id = error.split("Statement")[-1].split("not found")[0].strip()
+                referencing.append(statement_id)
+            if error.startswith("BODS duplicate error"):
+                statement_id = error.split("(")[-1].split(")")[0].strip()
+                duplicates.append(statement_id)
+            if error.startswith("BODS duplicate error"):
+                statement_id = error.split(":")[-1].split(")")[0].strip()
+                missing.append(statement_id)
+        out["ref_errors"] = referencing
+        out["dup_errors"] = duplicates
+        out["mis_errors"] = missing
+        with open(f"errors-{datetime.date.today().strftime('%d%m%y')}.json", "w") as out_file:
+            json.dump(out, out_file, indent = 4)
+
     def _process_errors(self):
         """Check for any errors in log"""
         for error in self.error_log[:self.error_limit]:
@@ -211,6 +234,7 @@ class ConsistencyChecks:
             output_text(self.console, f"{len(self.error_log)} errors: truncated at {self.error_limit}", "red")
         if len(self.error_log) > 0:
             stats = self._error_stats()
+            self._output_errors(stats)
             if not self._skip_errors(stats):
                 estats = []
                 for e in stats:
