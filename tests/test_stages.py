@@ -139,7 +139,10 @@ class TestPipeline:
                 data = output_file.readlines()
                 print(data)
                 assert len(data) == 20
-                assert json.loads(data[0].strip())['interestedParty']['describedByPersonStatement'] == '14105856581894595060'
+                for d in data:
+                    json_data = json.loads(d.strip())
+                    if json_data["statementID"] == "8359172029532323967":
+                        assert json_data['interestedParty']['describedByPersonStatement'] == '14105856581894595060'
 
     def test_sqlite_zip(self, temp_dir, output_dir, source_dir):
         """Test creation of output sqlite.db.gz file"""
