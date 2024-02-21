@@ -827,7 +827,7 @@ def run_flatterer(source, statement_type, sample=None):
                     if object["statementType"] == statement_type + 'Statement':
                         yield object
                         if num > 34000000:
-                            logger.debug("{object}")
+                            logger.debug("{}: {}", num, object)
 
     short_statement_type = statement_type.replace('ownershipOrControl', 'ooc')
 
