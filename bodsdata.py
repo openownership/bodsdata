@@ -45,6 +45,9 @@ from googleapiclient.http import MediaFileUpload
 from jsonref import JsonRef
 from openpyxl.cell.cell import ILLEGAL_CHARACTERS_RE
 
+from loguru import logger
+logger.add("bodsdata_debug.log")
+
 from consistency_checks import ConsistencyChecks
 
 this_path = Path(__file__).parent.absolute()
@@ -823,6 +826,8 @@ def run_flatterer(source, statement_type, sample=None):
 
                     if object["statementType"] == statement_type + 'Statement':
                         yield object
+                        if num > 34000000:
+                            logger.debug("{object}")
 
     short_statement_type = statement_type.replace('ownershipOrControl', 'ooc')
 

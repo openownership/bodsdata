@@ -29,7 +29,8 @@ install_requires = [
     "markdown",
     "datasette",
     "humanize",
-    "rich"
+    "rich",
+    "loguru"
 ]
 
 
