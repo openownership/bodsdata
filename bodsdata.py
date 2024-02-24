@@ -673,6 +673,15 @@ def download_file(url, source, name=None):
                zipObj.extractall(path=f'{output_dir}/{source}_download/')
             os.remove(filename)
 
+def copy_file(path, source, name=None):
+    print('Copying File')
+    os.makedirs(f'{output_dir}/{source}_download', exist_ok=True)
+    if not name:
+        name = path.split('/')[-1]
+
+    filename = f'{output_dir}/{source}_download/{name}'
+
+    shutil.copy(path, filename)
 
 def download_files_s3(source, s3_path_pattern, latest=False, bucket="bodsdata-oo", sample=None):
     """ Download file to form s3 with given regex pattern.
@@ -1044,6 +1053,8 @@ def run_pipeline(source, title, description, download, upload, bucket = '', chec
     remove_download(source)
     if bucket != '':
         download_files_s3(s3_path_pattern=download, source=source, latest=False, bucket=bucket)
+    elif not ":" in download:
+        copy_file(download, source=source)
     else:
         download_file(download, source=source)
     if check: check_data_consistency(source, check_missing_fields=check_missing_fields,
