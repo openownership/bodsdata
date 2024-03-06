@@ -888,7 +888,8 @@ def publish_metadata(source, title="", description="", upload=True):
            "title": title}
 
     bucket = get_s3_bucket(upload_bucket)
-    bucket_url = f"{bucket.meta.client.meta.endpoint_url}/{bucket.name}"
+    #bucket_url = f"{bucket.meta.client.meta.endpoint_url}/{bucket.name}"
+    bucket_url = f"https://{bucket.name}.{bucket.meta.client.meta.endpoint_url.split('/')[-1]}"
 
     all_sources = set()
     inspect_data = {}
