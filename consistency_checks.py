@@ -7,7 +7,12 @@ from pathlib import Path
 
 def map_statement_type(statement_type):
     """Map statement type to shorter version"""
-    mapping = {"ownershipOrControlStatement": 'ownership', "relationship": 'ownership', "personStatement": 'person', "entityStatement": 'entity'}
+    mapping = {"ownershipOrControlStatement": 'ownership',
+               "relationship": 'ownership',
+               "personStatement": 'person',
+               "person": 'person',
+               "entityStatement": 'entity',
+               "entity": 'entity'}
     return mapping[statement_type]
 
 
