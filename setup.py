@@ -29,7 +29,9 @@ install_requires = [
     "markdown",
     "datasette",
     "humanize",
-    "rich"
+    "rich",
+    "fastparquet",
+    "numpy<1.3"
 ]
 
 
