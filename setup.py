@@ -31,7 +31,7 @@ install_requires = [
     "humanize",
     "rich",
     "fastparquet",
-    "numpy<1.3"
+    "numpy<2"
 ]
 
 
