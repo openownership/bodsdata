@@ -788,7 +788,7 @@ def remove_output(source):
     shutil.rmtree(f'{output_dir}/{source}', ignore_errors=True)
 
 
-def run_flatterer(source, statement_type, sample=None):
+def run_flatterer(source, statement_type, sample=None, record_based=False):
     """ Run flatterer for a particular bods statement type
 
     Parameters
@@ -796,7 +796,7 @@ def run_flatterer(source, statement_type, sample=None):
     source : string
         Data Source Name
     statement_type : string
-        Bods statement type. One of person, entity, ownershipOrControl 
+        Bods statement type. One of person, entity, ownershipOrControl/relationship 
     sample : int
         Only take this amout of rows from the data.
     """
@@ -821,8 +821,12 @@ def run_flatterer(source, statement_type, sample=None):
                     if sample and num == sample:
                         return
 
-                    if object["statementType"] == statement_type + 'Statement':
-                        yield object
+                    if record_based:
+			if object["recordType"] == statement_type:
+                            yield object
+                    else:
+                        if object["statementType"] == statement_type + 'Statement':
+                            yield object
 
     short_statement_type = statement_type.replace('ownershipOrControl', 'ooc')
 
@@ -834,7 +838,7 @@ def run_flatterer(source, statement_type, sample=None):
         sqlite=True, sqlite_path=f'{output_dir}/{source}/sqlite.db')
 
 
-def flatten(source, sample=None):
+def flatten(source, sample=None, record_based=False):
     """ Run flatterer against all statement types and merge all into one folder.
 
     Parameters
@@ -844,9 +848,9 @@ def flatten(source, sample=None):
     sample : int
         Only take this amount of rows for each statement time.
     """
-    run_flatterer(source, 'person', sample)
-    run_flatterer(source, 'entity', sample)
-    run_flatterer(source, 'ownershipOrControl', sample)
+    run_flatterer(source, 'person', sample, record_based)
+    run_flatterer(source, 'entity', sample, record_based)
+    run_flatterer(source, 'relationship' if record_based else 'ownershipOrControl', sample, record_based)
 
     os.makedirs(f'{output_dir}/{source}/csv', exist_ok=True)
 
@@ -1011,7 +1015,8 @@ def update_website():
 
 
 def run_pipeline(source, title, description, download, upload, bucket = '', check = True, check_missing_fields=True,
-                  check_is_component=True, check_statement_dups=True, check_statement_refs=True, error_limit=1000):
+                  check_is_component=True, check_statement_dups=True, check_statement_refs=True, record_based=False,
+                  error_limit=1000):
     """ Run the entire bodsdata pipeline and (optionally) update website for a single source
     Parameters
     ----------
@@ -1038,6 +1043,8 @@ def run_pipeline(source, title, description, download, upload, bucket = '', chec
         Optionally disable checking for duplicate statementIDs
     check_statement_refs : bool/int
         Optionally disable checking for reference to missing statements
+    record_based : bool
+        Is new (BODS version >= 0.4) record based data
     error_limit: int
         Maximum number of consistency check errors to print out (default=1000)
     """
@@ -1050,7 +1057,7 @@ def run_pipeline(source, title, description, download, upload, bucket = '', chec
                                              check_is_component=check_is_component, check_statement_dups=check_statement_dups,
                                              check_statement_refs=check_statement_refs, error_limit=error_limit)
     remove_output(source)
-    flatten(source, False)
+    flatten(source, False, record_based)
     json_zip(source, upload)
     sqlite_zip(source, upload)
     sqlite_gzip(source, upload)
