@@ -7,7 +7,7 @@ from pathlib import Path
 
 def map_statement_type(statement_type):
     """Map statement type to shorter version"""
-    mapping = {"ownershipOrControlStatement": 'ownership', "personStatement": 'person', "entityStatement": 'entity'}
+    mapping = {"ownershipOrControlStatement": 'ownership', "relationship": 'ownership', "personStatement": 'person', "entityStatement": 'entity'}
     return mapping[statement_type]
 
 
@@ -44,7 +44,9 @@ class ConsistencyChecks:
                          error_limit=1000):
         """Initialise checks"""
         print("Initialising consistency checks on data")
+        self.record_based = None
         self.statements = {}
+        self.records = {}
         self.references = set()
         self.stats = {}
         self.source_dir = Path(source_dir)
@@ -61,16 +63,32 @@ class ConsistencyChecks:
 
     def _statement_stats(self, statement):
         """Create stats data for BODs statement"""
-        if statement['statementID'] in self.statements:
-            self.statements[statement['statementID']]['count'] += 1
+        if self.record_based:
+            if statement['statementId'] in self.statements:
+                self.statements[statement['statementId']]['count'] += 1
+            else:
+                self.statements[statement['statementId']] = {'count': 1,
+                                                             'type': map_statement_type(statement['recordType'])}
+            if statement['recordId'] in self.records:
+                self.records[statement['recordId']]['count'] += 1
+            else:
+                self.records[statement['recordId']] = {'count': 1,
+                                                       'type': map_statement_type(statement['recordType'])}
+            if statement['recordType'] == "relationship":
+                if instance(statement["recordDetails"]['subject'], str): self.references.add(statement["recordDetails"]['subject'])
+                if instance(statement["recordDetails"]['interestedParty"'], str): self.references.add(statement["recordDetails"]['interestedParty"'])
         else:
-            self.statements[statement['statementID']] = {'count': 1, 'type': map_statement_type(statement['statementType'])}
-        if statement['statementType'] == "ownershipOrControlStatement":
-            self.references.add(statement['subject']["describedByEntityStatement"])
-            if "describedByPersonStatement" in statement["interestedParty"]:
-                self.references.add(statement["interestedParty"]["describedByPersonStatement"])
-            elif "describedByEntityStatement" in statement["interestedParty"]:
-                self.references.add(statement["interestedParty"]["describedByEntityStatement"])
+            if statement['statementID'] in self.statements:
+                self.statements[statement['statementID']]['count'] += 1
+            else:
+                self.statements[statement['statementID']] = {'count': 1,
+                                                         'type': map_statement_type(statement['statementType'])}
+            if statement['statementType'] == "ownershipOrControlStatement":
+                self.references.add(statement['subject']["describedByEntityStatement"])
+                if "describedByPersonStatement" in statement["interestedParty"]:
+                    self.references.add(statement["interestedParty"]["describedByPersonStatement"])
+                elif "describedByEntityStatement" in statement["interestedParty"]:
+                    self.references.add(statement["interestedParty"]["describedByEntityStatement"])
 
     def _perform_check(self, check, message, extra_errors=False):
         """Perform check and log if there is an error"""
@@ -82,30 +100,51 @@ class ConsistencyChecks:
 
     def _check_statement(self, statement):
         """Check BODS statement fields"""
-        self._perform_check('statementID' in statement, f"Missing BODS field: No statementID in statement: {statement}")
-        self._perform_check('statementType' in statement, f"Missing BODS field: No statementType in statement: {statement}")
+        if self.record_based:
+            self._perform_check('statementId' in statement, f"Missing BODS field: No statementID in statement: {statement}")
+            self._perform_check('recordType' in statement, f"Missing BODS field: No recordType in statement: {statement}")
+            if self.check_is_component:
+                self._perform_check('isComponent' in statement["recordDetails"], f"Missing BODS field: No isComponent in statement: {statement}")
+            if statement['recordType'] == "person":
+                self._perform_check('personType' in statement["recordDetails"], f"Missing BODS field: No personType in person statement: {statement}")
+                if statement["recordDetails"]['personType'] in ('anonymousPerson', 'unknownPerson'):
+                    self._perform_check('reason' in statement["recordDetails"]['unspecifiedPersonDetails'], \
+                        f"Missing BODS field: No reason for person statement with {statement['recordDetails']['personType']} personType: {statement}")
+            elif statement['recordType'] == "entity":
+                self._perform_check('entityType' in statement["recordDetails"], f"Missing BODS field: No entityType in entity statement: {statement}")
+                if statement["recordDetails"]['entityType'] in ('anonymousEntity' or 'unknownEntity'):
+                    self._perform_check('reason' in statement["recordDetails"]['unspecifiedEntityDetails'], \
+                        f"Missing BODS field: No reason for entity statement with {statement['recordDetails']['entityType']} entityType: {statement}")
+            elif statement['recordType'] == "relationship":
+                self._perform_check('subject' in statement["recordDetails"], f"Missing BODS field: No subject in relationship statement: {statement}")
+                self._perform_check('interestedParty' in statement["recordDetails"], f"Missing BODS field: No interestedParty in relationship statement: {statement}")
+            else:
+                self._perform_check(False, f"BODS field value: Incorrect recordType for statement: {statement}")
+        else:
+            self._perform_check('statementID' in statement, f"Missing BODS field: No statementID in statement: {statement}")
+            self._perform_check('statementType' in statement, f"Missing BODS field: No statementType in statement: {statement}")
+            if self.check_is_component:
+                self._perform_check('isComponent' in statement, f"Missing BODS field: No isComponent in statement: {statement}")
+            if statement['statementType'] == "personStatement":
+                self._perform_check('personType' in statement, f"Missing BODS field: No personType in person statement: {statement}")
+                if statement['personType'] in ('anonymousPerson', 'unknownPerson'):
+                    self._perform_check('reason' in statement['unspecifiedPersonDetails'], \
+                        f"Missing BODS field: No reason for person statement with {statement['personType']} personType: {statement}")
+            elif statement['statementType'] == "entityStatement":
+                self._perform_check('entityType' in statement, f"Missing BODS field: No entityType in entity statement: {statement}")
+                if statement['entityType'] in ('anonymousEntity' or 'unknownEntity'):
+                     self._perform_check('reason' in statement['unspecifiedEntityDetails'], \
+                        f"Missing BODS field: No reason for entity statement with {statement['entityType']} entityType: {statement}")
+            elif statement['statementType'] == "ownershipOrControlStatement":
+                self._perform_check('subject' in statement, f"Missing BODS field: No subject in ownershipOrControlStatement: {statement}")
+                self._perform_check('describedByEntityStatement' in statement['subject'], \
+                    f"Missing BODS field: No subject/describedByEntityStatement in ownershipOrControlStatement: {statement}")
+                self._perform_check('interestedParty' in statement, f"Missing BODS field: No interestedParty in ownershipOrControlStatement: {statement}")
+            else:
+                self._perform_check(False, f"BODS field value: Incorrect statementType for statement: {statement}")
         self._perform_check('publicationDetails' in statement, f"Missing BODS field: No publicationDetails in statement: {statement}")
         self._perform_check('publicationDate' in statement['publicationDetails'], f"Missing BODS field: No publicationDetails/publicationDate in statement: {statement}")
         self._perform_check('bodsVersion' in statement['publicationDetails'], f"Missing BODS field: No publicationDetails/bodsVersion in statement: {statement}")
-        if self.check_is_component:
-            self._perform_check('isComponent' in statement, f"Missing BODS field: No isComponent in statement: {statement}")
-        if statement['statementType'] == "personStatement":
-            self._perform_check('personType' in statement, f"Missing BODS field: No personType in person statement: {statement}")
-            if statement['personType'] in ('anonymousPerson', 'unknownPerson'):
-                self._perform_check('reason' in statement['unspecifiedPersonDetails'], \
-                        f"Missing BODS field: No reason for person statement with {statement['personType']} personType: {statement}")
-        elif statement['statementType'] == "entityStatement":
-            self._perform_check('entityType' in statement, f"Missing BODS field: No entityType in entity statement: {statement}")
-            if statement['entityType'] in ('anonymousEntity' or 'unknownEntity'):
-                self._perform_check('reason' in statement['unspecifiedEntityDetails'], \
-                        f"Missing BODS field: No reason for entity statement with {statement['entityType']} entityType: {statement}")
-        elif statement['statementType'] == "ownershipOrControlStatement":
-            self._perform_check('subject' in statement, f"Missing BODS field: No subject in ownershipOrControlStatement: {statement}")
-            self._perform_check('describedByEntityStatement' in statement['subject'], \
-                    f"Missing BODS field: No subject/describedByEntityStatement in ownershipOrControlStatement: {statement}")
-            self._perform_check('interestedParty' in statement, f"Missing BODS field: No interestedParty in ownershipOrControlStatement: {statement}")
-        else:
-            self._perform_check(False, f"BODS field value: Incorrect statementType for statement: {statement}")
 
     def _read_json_file(self, f):
         """Read from JSON Lines file and yield items"""
@@ -118,9 +157,18 @@ class ConsistencyChecks:
                 for line in json_file.readlines():
                     yield json.loads(line)
 
+    def _infer_record_based(self, statement):
+        """BODS version"""
+        if self.record_based is None:
+            if "recordDetails" in statement:
+                self.record_based = True
+            else:
+                self.record_based = False
+
     def _process_file(self, f):
         """Process input file"""
         for statement in self._read_json_file(f):
+            self._infer_record_based(statement)
             if self.check_missing_fields: self._check_statement(statement)
             self._statement_stats(statement)
 
