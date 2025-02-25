@@ -80,8 +80,8 @@ class ConsistencyChecks:
                 self.records[statement['recordId']] = {'count': 1,
                                                        'type': map_statement_type(statement['recordType'])}
             if statement['recordType'] == "relationship":
-                if instance(statement["recordDetails"]['subject'], str): self.references.add(statement["recordDetails"]['subject'])
-                if instance(statement["recordDetails"]['interestedParty"'], str): self.references.add(statement["recordDetails"]['interestedParty"'])
+                if isinstance(statement["recordDetails"]['subject'], str): self.references.add(statement["recordDetails"]['subject'])
+                if isinstance(statement["recordDetails"]['interestedParty"'], str): self.references.add(statement["recordDetails"]['interestedParty"'])
         else:
             if statement['statementID'] in self.statements:
                 self.statements[statement['statementID']]['count'] += 1
