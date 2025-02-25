@@ -822,7 +822,7 @@ def run_flatterer(source, statement_type, sample=None, record_based=False):
                         return
 
                     if record_based:
-			if object["recordType"] == statement_type:
+                        if object["recordType"] == statement_type:
                             yield object
                     else:
                         if object["statementType"] == statement_type + 'Statement':
