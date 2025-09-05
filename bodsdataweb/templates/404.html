@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <div class="card bg-info mb-3 ms-n3 me-n2 ps-4 pt-2" >
+    <h5 class="serif" >Discover, download and analyse sources of beneficial ownership data published in line with the <a href="http://standard.openownership.org/">Beneficial Ownership Data Standard</a></h5>
+  </div>
+
+    <div class="card mb-3" >
+        <div class="card-body">
+          <h5 class="card-title serif">Not Found</h5>
+          <p class="card-text">
+             The page or data source you are looking for does not exist. Go to <a href="{{ url_for ('home') }}">home page</a>.
+          </p>
+        </div>
+    </div>
+{% endblock %}
+

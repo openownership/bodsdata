@@ -106,4 +106,6 @@ def source(source):
 
     return render_template('source.html', metadata=metadata[source], source=source)
 
-
+@app.route("/404.html")
+def not_found():
+    return render_template('404.html')
